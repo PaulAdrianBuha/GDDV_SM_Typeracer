@@ -3,13 +3,13 @@
 [ ] - recuperación de la contraseña por correo
 
 
-[ ] - no cifrar las conexiones (por simplicidad)
-[ ] - guardar las contraseñas en el servidor
-    [ ] - longitud minima
-    [ ] - "hasheadas" con sal y usando PBKDF2 o equivalente
+[x] - no cifrar las conexiones (por simplicidad)
+[x] - guardar las contraseñas en el servidor
+    [x] - longitud minima
+    [x] - "hasheadas" con salt y usando PBKDF2 o equivalente
 [ ] - cookies
     [ ] - crear cookie de sesión
     [ ] - mantener la sesión con cookie
     [ ] - que los usuarios no las puedan inventar/manipular
-    [ ] - sistema "remember me"?
+    [ ] - sistema "remember me"? (alargar el lifespan de la cookie)
 [ ] - CAPTCHA / **verificación pre-registro** / Pwned Passwords / 2FA

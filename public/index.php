@@ -57,19 +57,24 @@ function getPage($template, $configuration, $parameters) {
 }
 
 function postRegister($template, $db_connection, $configuration, $parameters) {
-    $db = new PDO($db_connection);
-    $sql = 'INSERT INTO users (user_name, user_password, user_email) VALUES (:user_name, :user_password, :user_email)';
-    $query = $db->prepare($sql);
-    $query->bindValue(':user_name', $parameters['user_name']);
-    $query->bindValue(':user_password', $parameters['user_password']);
-    $query->bindValue(':user_email', $parameters['user_email']);
-    if ($query->execute()) {
-        $configuration['{FEEDBACK}'] = 'Creat el compte <b>' . htmlentities($parameters['user_name']) . ' <br/> ' . htmlentities($parameters['user_email']) . '</b>';
-        $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar sessió';
-    } else {
-        // Això no s'executarà mai (???)
+    if (strlen($parameters['user_password']) < 8) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut crear el compte <b>"
-            . htmlentities($parameters['user_name']) . '</b></mark>';
+                . htmlentities($parameters['user_name']) . '</b> La contrasenya ha de ser de 8 caràcters com a mínim</mark>';
+    } else {
+        $db = new PDO($db_connection);
+        $sql = 'INSERT INTO users (user_name, user_password, user_email) VALUES (:user_name, :user_password, :user_email)';
+        $query = $db->prepare($sql);
+        $query->bindValue(':user_name', $parameters['user_name']);
+        $query->bindValue(':user_password', password_hash($parameters['user_password'], PASSWORD_BCRYPT));
+        $query->bindValue(':user_email', $parameters['user_email']);
+        if ($query->execute()) {
+            $configuration['{FEEDBACK}'] = 'Creat el compte <b>' . htmlentities($parameters['user_name']) . ' <br/> ' . htmlentities($parameters['user_email']) . '</b>';
+            $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar sessió';
+        } else {
+            // Això no s'executarà mai (???)
+            $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut crear el compte <b>"
+                . htmlentities($parameters['user_name']) . '</b></mark>';
+        } 
     }
     printHtml($template, $configuration);
 }
@@ -77,13 +82,13 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
 function postLogin($template, $db_connection, $configuration, $parameters) {
     // When user submits login form
     $db = new PDO($db_connection);
-    $sql = 'SELECT * FROM users WHERE (user_name = :user_name OR user_email = :user_name) and user_password = :user_password';
+    $sql = 'SELECT * FROM users WHERE (user_name = :user_name OR user_email = :user_name)';
     $query = $db->prepare($sql);
     $query->bindValue(':user_name', $parameters['user_name']);
-    $query->bindValue(':user_password', $parameters['user_password']);
+    // $query->bindValue(':user_password', $parameters['user_password']);
     $query->execute();
     $result_row = $query->fetch();
-    if ($result_row) {
+    if ($result_row && password_verify($parameters['user_password'], $result_row['user_password'])) {
         $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
         $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
         $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
