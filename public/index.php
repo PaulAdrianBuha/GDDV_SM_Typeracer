@@ -62,19 +62,21 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
                 . htmlentities($parameters['user_name']) . '</b> La contrasenya ha de ser de 8 caràcters com a mínim</mark>';
     } else {
         $db = new PDO($db_connection);
+        // TODO Hacer SELECT EXISTS user con email o password y dar un error menos generico, antes de hacer el INSERT
         $sql = 'INSERT INTO users (user_name, user_password, user_email) VALUES (:user_name, :user_password, :user_email)';
         $query = $db->prepare($sql);
         $query->bindValue(':user_name', $parameters['user_name']);
         $query->bindValue(':user_password', password_hash($parameters['user_password'], PASSWORD_BCRYPT));
         $query->bindValue(':user_email', $parameters['user_email']);
-        if ($query->execute()) {
+        try {
+            $query->execute();
             $configuration['{FEEDBACK}'] = 'Creat el compte <b>' . htmlentities($parameters['user_name']) . ' <br/> ' . htmlentities($parameters['user_email']) . '</b>';
             $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar sessió';
-        } else {
-            // Això no s'executarà mai (???)
-            $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut crear el compte <b>"
-                . htmlentities($parameters['user_name']) . '</b></mark>';
-        } 
+        } catch (PDOException $e) {
+             // Això no s'executarà mai (???)
+             $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pugut crear el compte <b>"
+             . htmlentities($parameters['user_name']) . '</b></mark>';
+        }
     }
     printHtml($template, $configuration);
 }
