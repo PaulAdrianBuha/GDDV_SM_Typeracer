@@ -1,4 +1,4 @@
-[ ] - handlear la excepción de cuando se crea una cuenta con el mismo nombre/email (hacer caso a parte)
+[x] - handlear la excepción de cuando se crea una cuenta con el mismo nombre/email (hacer caso a parte)
     [x] - hacer un try/catch en register
 [ ] - verificación de la cuenta aceptando por correo
     - Usar API si encontramos una en vez de usar directamente SMTP

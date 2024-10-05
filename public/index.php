@@ -1,5 +1,7 @@
 <?php
 
+define("EMAIL_FROM", "gddvsmtp@gmail.com");
+
 // defaults
 $template = 'home';
 $db_connection = 'sqlite:..\private\users.db';
@@ -70,8 +72,11 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
         $query->bindValue(':user_email', $parameters['user_email']);
         try {
             $query->execute();
+
             $configuration['{FEEDBACK}'] = 'Creat el compte <b>' . htmlentities($parameters['user_name']) . ' <br/> ' . htmlentities($parameters['user_email']) . '</b>';
             $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar sessió';
+            
+            sendVerificationEmail($parameters['user_email']);
         } catch (PDOException $e) {
              // Això no s'executarà mai (???)
              $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pugut crear el compte <b>"
@@ -79,6 +84,23 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
         }
     }
     printHtml($template, $configuration);
+}
+
+function sendVerificationEmail($emailTo) {
+    sendEmail($emailTo, "Verifica el teu compte", "Verifica el teu compte blabla");
+}
+
+function sendRecoveryEmail($emailTo) {
+    sendEmail($emailTo, "Recupera el teu compte", "Recupera el teu compte blabla");
+}
+
+function sendEmail($emailTo, $subject, $message) {
+    $headers = "From: " . EMAIL_FROM;
+    if (mail($emailTo, $subject, $message, $headers)){
+        echo "Ha ido bien" . $emailTo . " - " . $subject . " - " . $message . " - " . $headers;
+    } else {
+        echo "Ha ido mal";
+    }
 }
 
 function postLogin($template, $db_connection, $configuration, $parameters) {
