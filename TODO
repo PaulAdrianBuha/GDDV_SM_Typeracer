@@ -1,6 +1,7 @@
 [ ] - handlear la excepción de cuando se crea una cuenta con el mismo nombre/email (hacer caso a parte)
     [x] - hacer un try/catch en register
 [ ] - verificación de la cuenta aceptando por correo
+    - Usar API si encontramos una en vez de usar directamente SMTP
 [ ] - recuperación de la contraseña por correo
 
 
@@ -12,5 +13,6 @@
     [ ] - crear cookie de sesión
     [ ] - mantener la sesión con cookie
     [ ] - que los usuarios no las puedan inventar/manipular
+        - tal vez utilizar el hash de la contraseña mismo + algo mas para el hash de la cookie
     [ ] - sistema "remember me"? (alargar el lifespan de la cookie)
 [ ] - CAPTCHA / **verificación pre-registro** / Pwned Passwords / 2FA
