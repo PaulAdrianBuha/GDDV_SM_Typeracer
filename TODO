@@ -3,6 +3,7 @@
 [ ] - verificación de la cuenta aceptando por correo
     - Usar API si encontramos una en vez de usar directamente SMTP
 [ ] - recuperación de la contraseña por correo
+[ ] - añadir expiration date a verification_code?
 
 
 [x] - no cifrar las conexiones (por simplicidad)
