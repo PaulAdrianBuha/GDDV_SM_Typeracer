@@ -23,7 +23,8 @@ $configuration = array(
     '{LOGIN_LOGOUT_TEXT}' => 'Identificar-me',
     '{LOGIN_LOGOUT_URL}'  => '/?page=login',
     '{REGISTER_URL}'      => '/?page=register',
-    '{SITE_NAME}'         => 'La meva pàgina'
+    '{SITE_NAME}'         => 'La meva pàgina',
+    '{HOME_SECOND_BUTTON_DISPLAY}' => 'none'
 );
 
 // parameter processing
@@ -86,7 +87,6 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
         $verificationcode = strval(random_int(0, 9999999));
 
         $db = new PDO($db_connection);
-        // TODO Hacer SELECT EXISTS user con email o password y dar un error menos generico, antes de hacer el INSERT
         $sql = 'INSERT INTO users (user_name, user_password, user_email, user_verification_code) VALUES (:user_name, :user_password, :user_email, :user_verification_code)';
         $query = $db->prepare($sql);
         $query->bindValue(':user_name', $parameters['user_name']);
@@ -96,9 +96,10 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
         try {
             $query->execute();
             // TODO NO DEJAR INICIAR HASTA QUE VERIFIQUE LA CUENTA, MOSTRAR ALGUNA TEMPLATE DE plantilla_feedback.html MAYBE?
-            $configuration['{FEEDBACK}'] = 'Creat el compte <b>' . htmlentities($parameters['user_name']) . ' <br/> ' . htmlentities($parameters['user_email']) . '</b>';
-            $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar sessió';
-            
+            $configuration['{FEEDBACK}'] = 'Verifica el teu compte:  <b>' . htmlentities($parameters['user_name']) . ' <br/> ' . htmlentities($parameters['user_email']) . '</b>';
+            $configuration['{LOGIN_LOGOUT_TEXT}'] = "Torna a l'inici";
+            $configuration['{LOGIN_LOGOUT_URL}'] = '/';
+
             sendVerificationEmail($parameters['user_email'], $verificationcode);
         } catch (PDOException $e) {
              // Això no s'executarà mai (???)
@@ -120,9 +121,18 @@ function postLogin($template, $db_connection, $configuration, $parameters) {
     $query->execute();
     $result_row = $query->fetch();
     if ($result_row && password_verify($parameters['user_password'], $result_row['user_password'])) {
-        $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
-        $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
-        $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
+        if ($result_row['user_verified'] == 0) {
+            $configuration['{FEEDBACK}'] = "Revisa el correu per a verificar el compte";
+            $configuration['{LOGIN_LOGOUT_TEXT}'] = "Torna a l'inici";
+            $configuration['{LOGIN_LOGOUT_URL}'] = '/';
+            $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?verifyEmail=true&user_verification_code=" . $result_row['user_verification_code'] ."&user_verification_email=" . urlencode($result_row['user_email']);
+            $configuration['{HOME_SECOND_BUTTON_DISPLAY}'] = "block";
+            $configuration['{HOME_SECOND_BUTTON_TEXT}'] = "Reenviar correu verificació";
+        } else {
+            $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
+            $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
+            $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
+        }
     } else {
         $configuration['{FEEDBACK}'] = '<mark>ERROR: Usuari desconegut o contrasenya incorrecta</mark>';
     }
@@ -143,7 +153,6 @@ function verifyAccount($template, $db_connection, $configuration, $parameters) {
         $query = $db->prepare($sql);
         $query->bindValue(':user_email', $result_row['user_email']);
         $query->execute();
-        // gestionar error???
 
         $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
         $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';

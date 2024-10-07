@@ -4,7 +4,7 @@
 <head>
     <!-- dades tècniques de la pàgina -->
     <meta charset="utf-8">
-    <title>{SITE_NAME} :: Registre nou usuari</title>
+    <title>{SITE_NAME} :: Recuperació de compte</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"><!-- per a dispositius mòbils -->
     <meta name="author" content="Roger Roca i Paul Buha">
     <!-- estètica de la pàgina -->
@@ -25,21 +25,12 @@
         <section>
             <form method="POST" action="/">
                 <header>
-                    <h2>Crea un nou compte</h2>
+                    <h2>Canviar contrasenya</h2>
                 </header>
-                <label for="register_username">Nom d'usuari</label>
-                <input id="register_username" type="text" name="user_name" value="{REGISTER_USERNAME}" />
-                <label for="register_email">Correu electrònic</label>
-                <input id="register_email" type="email" name="user_email" />
-                <label for="register_password">Contrasenya</label>
-                <input id="register_password" type="password" name="user_password" minlength="8"/>
-                <input type="submit" name="register" value="Crear compte" />
+                <label for="recovery_username">Nom d'usuari/Correu electrònic</label>
+                <input id="recovery_username" type="text" name="recovery_name" value="{RECOVERY_USERNAME}" />
+                <input type="submit" name="recovery" value="Recuperar contrasenya" />
             </form>
-        </section>
-        <section>
-            <div>
-                <a href="{LOGIN_LOGOUT_URL}">{LOGIN_LOGOUT_TEXT}</a>
-            </div>
         </section>
     </main>
 </body>

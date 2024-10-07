@@ -1,9 +1,11 @@
 [x] - handlear la excepción de cuando se crea una cuenta con el mismo nombre/email (hacer caso a parte)
     [x] - hacer un try/catch en register
-[ ] - verificación de la cuenta aceptando por correo
+[x] - verificación de la cuenta aceptando por correo
     - Usar API si encontramos una en vez de usar directamente SMTP
 [ ] - recuperación de la contraseña por correo
-[ ] - añadir expiration date a verification_code?
+[ ] - Mejora: añadir expiration date a verification_code?
+[ ] - Mejora: Tener que poner pwd dos veces (en registro y en cambiar contraseña)
+
 
 
 [x] - no cifrar las conexiones (por simplicidad)
