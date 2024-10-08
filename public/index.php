@@ -48,9 +48,11 @@ if (isset($parameters['page'])) {
     postLogin($template, $db_connection, $configuration, $parameters);
 } else if (isset($parameters['verifyEmail'])) {
     verifyAccount($template, $db_connection, $configuration, $parameters);
+} else if (isset($parameters['resendVerifyEmail'])) {
+   resendVerifyEmail($template, $db_connection, $configuration, $parameters);
 } else {
-    // default page view when first entering
-    printHtml($template, $configuration);
+     // default page view when first entering
+     printHtml($template, $configuration);
 }
 
 // FUNCTIONS -----------------------------------------------------------------------------------------------------------------
@@ -122,10 +124,10 @@ function postLogin($template, $db_connection, $configuration, $parameters) {
     $result_row = $query->fetch();
     if ($result_row && password_verify($parameters['user_password'], $result_row['user_password'])) {
         if ($result_row['user_verified'] == 0) {
-            $configuration['{FEEDBACK}'] = "Revisa el correu per a verificar el compte";
+            $configuration['{FEEDBACK}'] = "Revisa el correu per verificar el compte";
             $configuration['{LOGIN_LOGOUT_TEXT}'] = "Torna a l'inici";
             $configuration['{LOGIN_LOGOUT_URL}'] = '/';
-            $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?verifyEmail=true&user_verification_code=" . $result_row['user_verification_code'] ."&user_verification_email=" . urlencode($result_row['user_email']);
+            $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($result_row['user_email']);
             $configuration['{HOME_SECOND_BUTTON_DISPLAY}'] = "block";
             $configuration['{HOME_SECOND_BUTTON_TEXT}'] = "Reenviar correu verificació";
         } else {
@@ -169,6 +171,28 @@ function sendVerificationEmail($emailTo, $verificationcode) {
         "{VERIFICATION_EMAIL}" => urlencode($emailTo) // encodifiquem el paràmetre per a que correus com exemple+1@gmail.com funcionin
     ];
     sendEmail($emailTo, "Verifica el teu compte", getHtml('verification_email', $verificationTemplateVars));
+}
+
+function resendVerifyEmail($template, $db_connection, $configuration, $parameters) {
+    $db = new PDO($db_connection);
+    $sql = 'SELECT * FROM users WHERE (user_email = :user_verification_email)';
+    $query = $db->prepare($sql);
+    $query->bindValue(':user_verification_email', $parameters['user_verification_email']);
+    $query->execute();
+    $result_row = $query->fetch();
+    if ($result_row) {
+        $configuration['{FEEDBACK}'] = "Revisa el correu per verificar el compte";
+        $configuration['{LOGIN_LOGOUT_TEXT}'] = "Torna a l'inici";
+        $configuration['{LOGIN_LOGOUT_URL}'] = '/';
+        $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($result_row['user_email']);
+        $configuration['{HOME_SECOND_BUTTON_DISPLAY}'] = "block";
+        $configuration['{HOME_SECOND_BUTTON_TEXT}'] = "Reenviar correu verificació";
+    
+        sendVerificationEmail($result_row['user_email'], $result_row['user_verification_code']);
+    } else {
+        $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut verificar el compte</mark>";
+    }
+    printHtml($template, $configuration);
 }
 
 function sendRecoveryEmail($emailTo) {
