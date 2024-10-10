@@ -2,9 +2,9 @@
     [x] - hacer un try/catch en register
 [x] - verificación de la cuenta aceptando por correo
     - Usar API si encontramos una en vez de usar directamente SMTP
-[ ] - recuperación de la contraseña por correo
+[x] - recuperación de la contraseña por correo
 [ ] - Mejora: añadir expiration date a verification_code?
-[ ] - Mejora: Tener que poner pwd dos veces (en registro y en cambiar contraseña)
+[x] - Mejora: Tener que poner pwd dos veces (en registro y en cambiar contraseña)
 
 
 
@@ -18,4 +18,4 @@
     [ ] - que los usuarios no las puedan inventar/manipular
         - tal vez utilizar el hash de la contraseña mismo + algo mas para el hash de la cookie
     [ ] - sistema "remember me"? (alargar el lifespan de la cookie)
-[ ] - CAPTCHA / **verificación pre-registro** / Pwned Passwords / 2FA
+[x] - CAPTCHA / **verificación pre-registro** / Pwned Passwords / 2FA

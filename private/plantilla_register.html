@@ -33,12 +33,19 @@
                 <input id="register_email" type="email" name="user_email" />
                 <label for="register_password">Contrasenya</label>
                 <input id="register_password" type="password" name="user_password" minlength="8"/>
+                <label for="repeat_password">Repetir contrasenya</label>
+                <input id="repeat_password" type="password" name="user_repeat_password" minlength="8"/>
                 <input type="submit" name="register" value="Crear compte" />
             </form>
         </section>
         <section>
             <div>
-                <a href="{LOGIN_LOGOUT_URL}">{LOGIN_LOGOUT_TEXT}</a>
+                <a href="/?page=login">Ja tinc un compte</a>
+            </div>
+        </section>
+        <section>
+            <div>
+                <a href="/">Torna a l'inici</a>
             </div>
         </section>
     </main>

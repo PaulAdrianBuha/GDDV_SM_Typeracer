@@ -21,8 +21,10 @@
     </style>
 </head>
 <body>
-    <h1>¡Hola!</h1>
-    <p>Haz clic en el botón para visitar la página:</p>
+    <h1>¡Benvingut!</h1>
+    <p>Avui ({TIMESTAMP}) t'has registrat a la nostra pàgina.</p>
+    <p>Fes click en el botó per verificar el teu compte:</p>
     <a href="http://localhost:8000/?verifyEmail=true&user_verification_code={VERIFICATION_CODE}&user_verification_email={VERIFICATION_EMAIL}" class="button">Verificar</a>
+    <p style="display: none">{TIMESTAMP}</p>
 </body>
 </html>
