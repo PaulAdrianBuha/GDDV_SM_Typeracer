@@ -18,7 +18,7 @@ require '../PHPMailer/src/SMTP.php';
 // defaults
 $template = 'home';
 $db_connection = 'sqlite:..\private\users.db';
-//global $db = new PDO($db_connection);
+$GLOBALS["db"] = new PDO($db_connection);
 
 $configuration = array(
     '{FEEDBACK}'          => '',
@@ -41,30 +41,29 @@ if ($method == 'POST') {
  
 if (isset($parameters['page'])) {
     // When user navigates to a diferent specific form page (register, login, recovery) 
-    getPage($template, $db_connection, $configuration, $parameters);
+    getPage($template, $configuration, $parameters);
 } else if (isset($parameters['register'])) {
     // When user submits the register form
-    postRegister($template, $db_connection, $configuration, $parameters);
+    postRegister($template, $configuration, $parameters);
 } else if (isset($parameters['login'])) {
     // When user submits the login form
-    postLogin($template, $db_connection, $configuration, $parameters);
+    postLogin($template, $configuration, $parameters);
 } else if (isset($parameters['verifyEmail'])) {
     // When user presses the verify button from the email
-    verifyAccount($template, $db_connection, $configuration, $parameters);
+    verifyAccount($template, $configuration, $parameters);
 } else if (isset($parameters['resendVerifyEmail'])) {
     // When user tries to login without verifying or when they press the resend verification email button
-    resendVerifyEmail($template, $db_connection, $configuration, $parameters);
+    resendVerifyEmail($template, $configuration, $parameters);
 } else if (isset($parameters['recovery'])) {
     // When user submits the account recovery form
-    postRecovery($template, $db_connection, $configuration, $parameters);
+    postRecovery($template, $configuration, $parameters);
 } else if (isset($parameters['changePasswordConfirm'])) {
     // When user confirms the password change
-    changePassword($template, $db_connection, $configuration, $parameters);
+    changePassword($template, $configuration, $parameters);
 } else {
     if (isset($_COOKIE['SessionCookie'])) { // if the session is still open, directly log in the player
-        $db = new PDO($db_connection);
         $sql = 'SELECT * FROM cookies c JOIN users u ON c.user_id = u.user_id WHERE c.cookie = :cookie';
-        $query = $db->prepare($sql);
+        $query = $GLOBALS["db"]->prepare($sql);
         $query->bindValue(':cookie', $_COOKIE["SessionCookie"]);
         $query->execute();
 
@@ -99,7 +98,7 @@ function getHtml($template, $configuration) {
 }
 
 // (VIEW) Either the register, the login page, or the password recovery page. Before submitting any form
-function getPage($template, $db_connection, $configuration, $parameters) {
+function getPage($template, $configuration, $parameters) {
     if ($parameters['page'] == 'register') {
         $template = 'register';
         $configuration['{REGISTER_USERNAME}'] = '';
@@ -115,9 +114,8 @@ function getPage($template, $db_connection, $configuration, $parameters) {
         
     } else if ($parameters['page'] == 'change_password') {
         // Executed when pressing the change password button from the email
-        $db = new PDO($db_connection);
         $sql = 'SELECT * FROM users WHERE (user_verification_code = :user_verification_code AND user_email = :user_email)';
-        $query = $db->prepare($sql);
+        $query = $GLOBALS["db"]->prepare($sql);
         $query->bindValue(':user_verification_code', $parameters['user_verification_code']);
         $query->bindValue(':user_email', $parameters['user_email']);
         $query->execute();
@@ -131,7 +129,7 @@ function getPage($template, $db_connection, $configuration, $parameters) {
             $configuration['{FEEDBACK}'] = "S'ha produït un error en el procés de recuperació.";
         }
     } else if ($parameters['page'] == 'logout') {
-        deleteCookieDB($db_connection);
+        deleteCookieDB();
         setcookie("SessionCookie", expires_or_options: time() - 1);
     }
 
@@ -139,19 +137,17 @@ function getPage($template, $db_connection, $configuration, $parameters) {
 }
 
 // Delete cookie from database
-function deleteCookieDB($db_connection) {
-    $db = new PDO($db_connection);
+function deleteCookieDB() {
     $sql = 'DELETE FROM cookies WHERE cookie = :cookie';
-    $query = $db->prepare($sql);
+    $query = $GLOBALS["db"]->prepare($sql);
     $query->bindValue(':cookie', $_COOKIE["SessionCookie"]);
     $query->execute();
 }
 
 // Insert session cookie into database
-function addCookieDB($db_connection, $cookie, $userId) {
-    $db = new PDO($db_connection);
+function addCookieDB($cookie, $userId) {
     $sql = 'INSERT INTO cookies (cookie, user_id) VALUES (:cookie, :user_id)';
-    $query = $db->prepare($sql);
+    $query = $GLOBALS["db"]->prepare($sql);
     $query->bindValue(':cookie', $cookie);
     $query->bindValue(':user_id', $userId);
     try {
@@ -162,16 +158,15 @@ function addCookieDB($db_connection, $cookie, $userId) {
 }
 
 // Create session
-function createSession($db_connection, $result_row) {
-    $cookieValue = strval(random_int(0,99999999));
+function createSession($result_row) {
+    $cookieValue = random_bytes(20);
     setcookie("SessionCookie", $cookieValue, time() + (500 * 365 * 24 * 60 * 60)); // expires in 500 years
-    echo $db_connection, $cookieValue, $result_row['user_id'];
-    addCookieDB($db_connection, $cookieValue, $result_row['user_id']);
+    addCookieDB($cookieValue, $result_row['user_id']);
 }
 
 // (VIEW) Executed after submitting the registration form
 // Uses plantilla_reverify
-function postRegister($template, $db_connection, $configuration, $parameters) {
+function postRegister($template, $configuration, $parameters) {
     if (strlen($parameters['user_password']) < 8) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut crear el compte <b>"
                 . htmlentities($parameters['user_name']) . '</b> La contrasenya ha de ser de 8 caràcters com a mínim</mark>';
@@ -182,9 +177,8 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
          // Generamos un codigo random para verificar que enviaremos al correo y asociamos al user en la base de datos
         $verificationcode = random_bytes(10);
 
-        $db = new PDO($db_connection);
         $sql = 'INSERT INTO users (user_name, user_password, user_email, user_verification_code) VALUES (:user_name, :user_password, :user_email, :user_verification_code)';
-        $query = $db->prepare($sql);
+        $query = $GLOBALS["db"]->prepare($sql);
         $query->bindValue(':user_name', $parameters['user_name']);
         $query->bindValue(':user_password', password_hash($parameters['user_password'], PASSWORD_BCRYPT));
         $query->bindValue(':user_email', $parameters['user_email']);
@@ -208,10 +202,9 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
 
 // (VIEW) Executed after submitting the login form
 // Uses plantilla_home if the user is verified and plantilla_reverify if not
-function postLogin($template, $db_connection, $configuration, $parameters) {
-    $db = new PDO($db_connection);
+function postLogin($template, $configuration, $parameters) {
     $sql = 'SELECT * FROM users WHERE (user_name = :user_name OR user_email = :user_name)';
-    $query = $db->prepare($sql);
+    $query = $GLOBALS["db"]->prepare($sql);
     $query->bindValue(':user_name', $parameters['user_name']);
     // $query->bindValue(':user_password', $parameters['user_password']);
     $query->execute();
@@ -224,8 +217,8 @@ function postLogin($template, $db_connection, $configuration, $parameters) {
             $configuration['{LOGIN_LOGOUT_URL}'] = '/';
             $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($result_row['user_email']);
         } else {
-            //$template = 'home';
-            createSession($db_connection, $result_row);
+            $template = 'loggedin';
+            createSession($result_row);
 
             $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
             $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
@@ -240,11 +233,10 @@ function postLogin($template, $db_connection, $configuration, $parameters) {
 
 // (VIEW) Executed after submitting the account recovery form
 // Uses plantilla_recovery (loops back to it)
-function postRecovery($template, $db_connection, $configuration, $parameters) {
+function postRecovery($template, $configuration, $parameters) {
     $template = 'recovery';
-    $db = new PDO($db_connection);
     $sql = 'SELECT * FROM users WHERE (user_name = :recovery_name OR user_email = :recovery_name)';
-    $query = $db->prepare($sql);
+    $query = $GLOBALS["db"]->prepare($sql);
     $query->bindValue(':recovery_name', $parameters['recovery_name']);
     $query->execute();
     $result_row = $query->fetch();
@@ -260,22 +252,22 @@ function postRecovery($template, $db_connection, $configuration, $parameters) {
 
 // (VIEW) Executed when pressing the verify button from the email
 // Uses plantilla_home, because it acts as logging into the account
-function verifyAccount($template, $db_connection, $configuration, $parameters) {
-    $db = new PDO($db_connection);
+function verifyAccount($template, $configuration, $parameters) {
     $sql = 'SELECT * FROM users WHERE (user_verification_code = :user_verification_code AND user_email = :user_verification_email)';
-    $query = $db->prepare($sql);
+    $query = $GLOBALS["db"]->prepare($sql);
     $query->bindValue(':user_verification_code', $parameters['user_verification_code']);
     $query->bindValue(':user_verification_email', $parameters['user_verification_email']);
     $query->execute();
     $result_row = $query->fetch();
     if ($result_row) {
+        $template = 'loggedin';
         // La verificación será correcta si al pulsar el botón de verificar (que enviará el código por GET) coincide con el código de verificación de la base de datos
         $sql = 'UPDATE users SET user_verified = 1 WHERE (user_email = :user_email)';
-        $query = $db->prepare($sql);
+        $query = $GLOBALS["db"]->prepare($sql);
         $query->bindValue(':user_email', $result_row['user_email']);
         $query->execute();
 
-        createSession($db_connection, $result_row);
+        createSession($result_row);
         
         $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
         $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
@@ -300,11 +292,10 @@ function sendVerificationEmail($emailTo, $verificationcode) {
 // (VIEW) Executed when trying to log in without having verified the account beforehand or when choosing to resend the verification email.
 // Is basically a page acting as barrier, the "resend verification email" option is displayed
 // Uses plantilla_reverify
-function resendVerifyEmail($template, $db_connection, $configuration, $parameters) {
+function resendVerifyEmail($template, $configuration, $parameters) {
     $template = 'reverify';
-    $db = new PDO($db_connection);
     $sql = 'SELECT * FROM users WHERE (user_email = :user_verification_email)';
-    $query = $db->prepare($sql);
+    $query = $GLOBALS["db"]->prepare($sql);
     $query->bindValue(':user_verification_email', $parameters['user_verification_email']);
     $query->execute();
     $result_row = $query->fetch();
@@ -361,15 +352,14 @@ function sendEmail($emailTo, $subject, $message) {
     }
 }
 
-function changePassword($template, $db_connection, $configuration, $parameters) {
+function changePassword($template, $configuration, $parameters) {
     if (strlen($parameters['user_password']) < 8) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut canviar la contrasenya. La contrasenya ha de ser de 8 caràcters com a mínim.</mark>";
     } else if ( $parameters['user_recover_password'] != $parameters['user_repeat_password']) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: Les contrasenyes no coincideixen</mark>";
     } else {
-        $db = new PDO($db_connection);
         $sql = 'UPDATE users SET user_password = :user_recover_password WHERE (user_email = :user_email AND user_verification_code = :user_verification_code)';
-        $query = $db->prepare($sql);
+        $query = $GLOBALS["db"]->prepare($sql);
         $query->bindValue(':user_recover_password', password_hash($parameters['user_recover_password'], PASSWORD_BCRYPT));
         $query->bindValue(':user_email', $parameters['user_email']);
         $query->bindValue(':user_verification_code', $parameters['user_verification_code']);
