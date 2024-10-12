@@ -1,4 +1,12 @@
 <?php
+// P1 - Sistemes Multijugador
+// Roger Roca i Paul Buha
+// Oct 2024
+// 
+// Bon dia/tarda,
+// Hem tardat una mica més del que esperàvem a arreglar uns últims errors que ens van sortir a última hora
+// i per acabar d'implementar el sistema de cookies. Espero que considereu que ha valgut la pena la lleugera
+// tardança i demanem disculpes per no haver-ho pogut entregar el dimecres passat.
 
 define("EMAIL_FROM", "gddvsmtp@gmail.com"); // constant
 
@@ -61,7 +69,8 @@ if (isset($parameters['page'])) {
     // When user confirms the password change
     changePassword($template, $configuration, $parameters);
 } else {
-    if (isset($_COOKIE['SessionCookie'])) { // if the session is still open, directly log in the player
+    // if the session is still open, directly login the player
+    if (isset($_COOKIE['SessionCookie'])) { 
         $sql = 'SELECT * FROM cookies c JOIN users u ON c.user_id = u.user_id WHERE c.cookie = :cookie';
         $query = $GLOBALS["db"]->prepare($sql);
         $query->bindValue(':cookie', $_COOKIE["SessionCookie"]);
@@ -69,7 +78,7 @@ if (isset($parameters['page'])) {
 
         $result_row = $query->fetch();
         if($result_row) {
-            //$template = 'home';
+            $template = 'loggedin';
             $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
             $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
             $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
