@@ -8,3 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE UNIQUE INDEX user_name_UNIQUE ON users (user_name ASC);
+
+CREATE TABLE IF NOT EXISTS cookies (
+    cookie varchar(255) PRIMARY KEY,
+    user_id INTEGER
+);

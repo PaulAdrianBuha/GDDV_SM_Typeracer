@@ -1,6 +1,5 @@
 <?php
 
-var_dump(setlocale(LC_ALL, 'ca_ES'));
 define("EMAIL_FROM", "gddvsmtp@gmail.com"); // constant
 
 ini_set('display_errors', 1);
@@ -19,6 +18,8 @@ require '../PHPMailer/src/SMTP.php';
 // defaults
 $template = 'home';
 $db_connection = 'sqlite:..\private\users.db';
+//global $db = new PDO($db_connection);
+
 $configuration = array(
     '{FEEDBACK}'          => '',
     '{LOGIN_LOGOUT_TEXT}' => 'Identificar-me',
@@ -60,8 +61,27 @@ if (isset($parameters['page'])) {
     // When user confirms the password change
     changePassword($template, $db_connection, $configuration, $parameters);
 } else {
-    // default page view when first entering
-    printHtml($template, $configuration);
+    if (isset($_COOKIE['SessionCookie'])) { // if the session is still open, directly log in the player
+        $db = new PDO($db_connection);
+        $sql = 'SELECT * FROM cookies c JOIN users u ON c.user_id = u.user_id WHERE c.cookie = :cookie';
+        $query = $db->prepare($sql);
+        $query->bindValue(':cookie', $_COOKIE["SessionCookie"]);
+        $query->execute();
+
+        $result_row = $query->fetch();
+        if($result_row) {
+            //$template = 'home';
+            $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
+            $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
+            $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
+        } else {
+            $configuration['{FEEDBACK}'] = "<mark>ERROR: Hi ha hagut un error a la sessió</mark>";
+        }
+        printHtml($template, $configuration);
+    } else {
+        // default page view when first entering
+        printHtml($template, $configuration);
+    }
 }
 
 // FUNCTIONS -----------------------------------------------------------------------------------------------------------------
@@ -106,14 +126,47 @@ function getPage($template, $db_connection, $configuration, $parameters) {
             $template = 'change_password';
             $configuration['{USER_VERIFICATION_CODE}'] = $parameters['user_verification_code'];
             $configuration['{USER_EMAIL}'] = $parameters['user_email'];
-        }
-        else {
+        } else {
             //$template = 'home';
             $configuration['{FEEDBACK}'] = "S'ha produït un error en el procés de recuperació.";
         }
+    } else if ($parameters['page'] == 'logout') {
+        deleteCookieDB($db_connection);
+        setcookie("SessionCookie", expires_or_options: time() - 1);
     }
 
     printHtml($template, $configuration);
+}
+
+// Delete cookie from database
+function deleteCookieDB($db_connection) {
+    $db = new PDO($db_connection);
+    $sql = 'DELETE FROM cookies WHERE cookie = :cookie';
+    $query = $db->prepare($sql);
+    $query->bindValue(':cookie', $_COOKIE["SessionCookie"]);
+    $query->execute();
+}
+
+// Insert session cookie into database
+function addCookieDB($db_connection, $cookie, $userId) {
+    $db = new PDO($db_connection);
+    $sql = 'INSERT INTO cookies (cookie, user_id) VALUES (:cookie, :user_id)';
+    $query = $db->prepare($sql);
+    $query->bindValue(':cookie', $cookie);
+    $query->bindValue(':user_id', $userId);
+    try {
+        $query->execute();
+    } catch (Exception $e) {
+        echo "Error";
+    }
+}
+
+// Create session
+function createSession($db_connection, $result_row) {
+    $cookieValue = strval(random_int(0,99999999));
+    setcookie("SessionCookie", $cookieValue, time() + (500 * 365 * 24 * 60 * 60)); // expires in 500 years
+    echo $db_connection, $cookieValue, $result_row['user_id'];
+    addCookieDB($db_connection, $cookieValue, $result_row['user_id']);
 }
 
 // (VIEW) Executed after submitting the registration form
@@ -127,28 +180,28 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
     } else {
         $template = 'reverify';
          // Generamos un codigo random para verificar que enviaremos al correo y asociamos al user en la base de datos
-         $verificationcode = strval(random_int(0, 9999999));
+        $verificationcode = random_bytes(10);
 
-         $db = new PDO($db_connection);
-         $sql = 'INSERT INTO users (user_name, user_password, user_email, user_verification_code) VALUES (:user_name, :user_password, :user_email, :user_verification_code)';
-         $query = $db->prepare($sql);
-         $query->bindValue(':user_name', $parameters['user_name']);
-         $query->bindValue(':user_password', password_hash($parameters['user_password'], PASSWORD_BCRYPT));
-         $query->bindValue(':user_email', $parameters['user_email']);
-         $query->bindValue(':user_verification_code', $verificationcode);
-         try {
-             $query->execute();
-             $configuration['{FEEDBACK}'] = 'Revisa el correu per verificar el teu compte:  <b>' . htmlentities($parameters['user_name']) . ' <br/> ' . htmlentities($parameters['user_email']) . '</b>';
-             $configuration['{LOGIN_LOGOUT_TEXT}'] = "Torna a l'inici";
-             $configuration['{LOGIN_LOGOUT_URL}'] = '/';
-             $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($parameters['user_email']);
- 
-             sendVerificationEmail($parameters['user_email'], $verificationcode);
-         } catch (PDOException $e) {
-              // Això no s'executarà mai (???)
-              $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pugut crear el compte <b>"
-              . htmlentities($parameters['user_name']) . '</b></mark>';
-         }
+        $db = new PDO($db_connection);
+        $sql = 'INSERT INTO users (user_name, user_password, user_email, user_verification_code) VALUES (:user_name, :user_password, :user_email, :user_verification_code)';
+        $query = $db->prepare($sql);
+        $query->bindValue(':user_name', $parameters['user_name']);
+        $query->bindValue(':user_password', password_hash($parameters['user_password'], PASSWORD_BCRYPT));
+        $query->bindValue(':user_email', $parameters['user_email']);
+        $query->bindValue(':user_verification_code', $verificationcode);
+        try {
+            $query->execute();
+            $configuration['{FEEDBACK}'] = 'Revisa el correu per verificar el teu compte:  <b>' . htmlentities($parameters['user_name']) . ' <br/> ' . htmlentities($parameters['user_email']) . '</b>';
+            $configuration['{LOGIN_LOGOUT_TEXT}'] = "Torna a l'inici";
+            $configuration['{LOGIN_LOGOUT_URL}'] = '/';
+            $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($parameters['user_email']);
+
+            sendVerificationEmail($parameters['user_email'], $verificationcode);
+        } catch (PDOException $e) {
+            // Això no s'executarà mai (???)
+            $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pugut crear el compte <b>"
+            . htmlentities($parameters['user_name']) . '</b></mark>';
+        }
     }
     printHtml($template, $configuration);
 }
@@ -157,7 +210,6 @@ function postRegister($template, $db_connection, $configuration, $parameters) {
 // Uses plantilla_home if the user is verified and plantilla_reverify if not
 function postLogin($template, $db_connection, $configuration, $parameters) {
     $db = new PDO($db_connection);
-    // TODO CHECK USER IS VERIFIED
     $sql = 'SELECT * FROM users WHERE (user_name = :user_name OR user_email = :user_name)';
     $query = $db->prepare($sql);
     $query->bindValue(':user_name', $parameters['user_name']);
@@ -173,6 +225,8 @@ function postLogin($template, $db_connection, $configuration, $parameters) {
             $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($result_row['user_email']);
         } else {
             //$template = 'home';
+            createSession($db_connection, $result_row);
+
             $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
             $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
             $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
@@ -221,9 +275,12 @@ function verifyAccount($template, $db_connection, $configuration, $parameters) {
         $query->bindValue(':user_email', $result_row['user_email']);
         $query->execute();
 
+        createSession($db_connection, $result_row);
+        
         $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
         $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
         $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
+            
     } else {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut verificar el compte</mark>";
     }
@@ -233,7 +290,7 @@ function verifyAccount($template, $db_connection, $configuration, $parameters) {
 // Sends a specific verification email to the specified email. Automatically executed after registering
 function sendVerificationEmail($emailTo, $verificationcode) {
     $verificationTemplateVars = [
-        "{VERIFICATION_CODE}" => $verificationcode,
+        "{VERIFICATION_CODE}" => urlencode($verificationcode),
         "{VERIFICATION_EMAIL}" => urlencode($emailTo), // encodifiquem el paràmetre per a que correus com exemple+1@gmail.com funcionin
         "{TIMESTAMP}" => date('l jS \of F Y h:i:s A') // afegim una variable que sigui diferent per cada correu per a que no s'amagui a partir de la 2a vegada
     ];
@@ -267,7 +324,7 @@ function resendVerifyEmail($template, $db_connection, $configuration, $parameter
 // Sends a specific email for recovering your password
 function sendRecoveryEmail($emailTo, $verificationcode) {
     $recoveryTemplateVars = [
-        "{VERIFICATION_CODE}" => $verificationcode,
+        "{VERIFICATION_CODE}" => urlencode($verificationcode),
         "{EMAIL}" => urlencode($emailTo), // encodifiquem el paràmetre per a que correus com exemple+1@gmail.com funcionin
         "{TIMESTAMP}" => date('l jS \of F Y h:i:s A') // afegim una variable que sigui diferent per cada correu per a que no s'amagui a partir de la 2a vegada
     ];
@@ -318,6 +375,7 @@ function changePassword($template, $db_connection, $configuration, $parameters) 
         $query->bindValue(':user_verification_code', $parameters['user_verification_code']);
         try {
             $query->execute();
+
             $configuration['{FEEDBACK}'] = "S'ha canviat la contrasenya exitosament";
         } catch (PDOException $e) {
             $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut canviar la contrasenya</mark>";
