@@ -362,7 +362,7 @@ function sendEmail($emailTo, $subject, $message) {
 }
 
 function changePassword($template, $configuration, $parameters) {
-    if (strlen($parameters['user_password']) < 8) {
+    if (strlen($parameters['user_recover_password']) < 8) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut canviar la contrasenya. La contrasenya ha de ser de 8 caràcters com a mínim.</mark>";
     } else if ( $parameters['user_recover_password'] != $parameters['user_repeat_password']) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: Les contrasenyes no coincideixen</mark>";
