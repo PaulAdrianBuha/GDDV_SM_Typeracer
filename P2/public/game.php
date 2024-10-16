@@ -88,7 +88,9 @@ switch ($accio) {
                     'x' => $joc['circle_x'],
                     'y' => $joc['circle_y'],
                     'visible' => $joc['circle_visible']
-                ]
+                ],
+                'progress_player1' => $joc['progress_player1'],
+                'progress_player2' => $joc['progress_player2'],
             ]);
         }
         break;
@@ -143,6 +145,67 @@ switch ($accio) {
         $stmt->execute();
 
         // Comprovar si hi ha un guanyador
+        if ($joc['points_player1'] >= 10) {
+            $stmt = $db->prepare('UPDATE games SET winner = :player_id WHERE game_id = :game_id');
+            $stmt->bindValue(':player_id', $joc['player1']);
+            $stmt->bindValue(':game_id', $game_id);
+            $stmt->execute();
+        } elseif ($joc['points_player2'] >= 10) {
+            $stmt = $db->prepare('UPDATE games SET winner = :player_id WHERE game_id = :game_id');
+            $stmt->bindValue(':player_id', $joc['player2']);
+            $stmt->bindValue(':game_id', $game_id);
+            $stmt->execute();
+        }
+
+        echo json_encode(['success' => true]);
+        break;
+    case 'type':
+        $game_id = $_GET['game_id'];
+        $player_id = $_SESSION['player_id'];
+        $progress = $_GET['progress'];
+
+        $stmt = $db->prepare('SELECT * FROM games WHERE game_id = :game_id');
+        $stmt->bindValue(':game_id', $game_id);
+        $stmt->execute();
+        $joc = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$joc || $joc['winner']) {
+            echo json_encode(['error' => 'Joc finalitzat o no trobat']);
+            break;
+        }
+
+        /* TODO APLICAR A TYPE
+        if (!$joc['circle_visible']) {
+            echo json_encode(['error' => 'No hi ha cap cercle per fer clic']);
+            break;
+        }
+
+        // Comprovar si algú ja ha fet clic al cercle
+        if ($joc['next_circle_time'] !== null && $joc['next_circle_time'] > time()) {
+            echo json_encode(['error' => 'El cercle ja ha estat clicat']);
+            break;
+        }
+        */
+
+        // Determinar quin jugador ha escrit text
+        if ($joc['player1'] === $player_id) {
+            $stmt = $db->prepare('UPDATE games SET progress_player1 = :progress_player1 WHERE game_id = :game_id');
+            $stmt->bindValue(':game_id', $game_id);
+            $stmt->bindValue(':progress_player1', $progress);
+            $stmt->execute();
+            $joc['progress_player1'] = $progress; // Actualitzar l'array $joc
+        } elseif ($joc['player2'] === $player_id) {
+            $stmt = $db->prepare('UPDATE games SET progress_player2 = :progress_player2 WHERE game_id = :game_id');
+            $stmt->bindValue(':game_id', $game_id);
+            $stmt->bindValue(':progress_player2', $progress);
+            $stmt->execute();
+            $joc['progress_player2'] = $progress; // Actualitzar l'array $joc
+        } else {
+            echo json_encode(['error' => 'Jugador invàlid']);
+            break;
+        }
+
+        // TODO Comprovar si hi ha un guanyador, fer servir llargada paraula game i comparar-la amb llargada player
         if ($joc['points_player1'] >= 10) {
             $stmt = $db->prepare('UPDATE games SET winner = :player_id WHERE game_id = :game_id');
             $stmt->bindValue(':player_id', $joc['player1']);
