@@ -1,0 +1,21 @@
+[x] - handlear la excepción de cuando se crea una cuenta con el mismo nombre/email (hacer caso a parte)
+    [x] - hacer un try/catch en register
+[x] - verificación de la cuenta aceptando por correo
+    - Usar API si encontramos una en vez de usar directamente SMTP
+[x] - recuperación de la contraseña por correo
+[ ] - Mejora: añadir expiration date a verification_code?
+[x] - Mejora: Tener que poner pwd dos veces (en registro y en cambiar contraseña)
+
+
+
+[x] - no cifrar las conexiones (por simplicidad)
+[x] - guardar las contraseñas en el servidor
+    [x] - longitud minima
+    [x] - "hasheadas" con salt y usando PBKDF2 o equivalente
+[ ] - cookies
+    [ ] - crear cookie de sesión
+    [ ] - mantener la sesión con cookie
+    [ ] - que los usuarios no las puedan inventar/manipular
+        - tal vez utilizar el hash de la contraseña mismo + algo mas para el hash de la cookie
+    [ ] - sistema "remember me"? (alargar el lifespan de la cookie)
+[x] - CAPTCHA / **verificación pre-registro** / Pwned Passwords / 2FA

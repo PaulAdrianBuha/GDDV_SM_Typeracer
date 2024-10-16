@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email con Botón</title>
+    <style>
+        .button {
+            background-color: #4CAF50; /* Verde */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Canvia la contrasenya</h1>
+    <p>Fes click al botó per canviar la teva contrasenya:</p>
+    <a href="http://localhost:8000/?page=change_password&user_verification_code={VERIFICATION_CODE}&user_email={EMAIL}" class="button">Ves-hi!</a>
+    <p style="display: none">{TIMESTAMP}</p>
+</body>
+</html>
