@@ -42,15 +42,16 @@ switch ($accio) {
             $stmt->execute();
             $phrases = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            $phraseObject = $phrases[rand(0, count($phrases) - 1)];
-            $phraseId = $phraseObject['phrase_id'];
-            $phrase = $phraseObject['phrase'];
+            $phrase_object = $phrases[rand(0, count($phrases) - 1)];
+            $phrase_id = $phrase_object['phrase_id'];
+            $phrase = $phrase_object['phrase'];
 
             $game_id = uniqid();
-            $stmt = $db->prepare('INSERT INTO games (game_id, player1, phrase_id) VALUES (:game_id, :player_id, :phrase_id)');
+            $stmt = $db->prepare('INSERT INTO games (game_id, player1, phrase_id, previous_sabotage_start_time) VALUES (:game_id, :player_id, :phrase_id, :previous_sabotage_start_time)');
             $stmt->bindValue(':game_id', $game_id);
             $stmt->bindValue(':player_id', $player_id);
-            $stmt->bindValue(':phrase_id', $phraseId);
+            $stmt->bindValue(':phrase_id', $phrase_id);
+            $stmt->bindValue(':previous_sabotage_start_time', time());
             $stmt->execute();
         }
 
@@ -59,7 +60,7 @@ switch ($accio) {
 
     case 'status':
         $game_id = $_GET['game_id'];
-        $stmt = $db->prepare('SELECT * FROM games WHERE game_id = :game_id');
+        $stmt = $db->prepare('SELECT games.*, sabotages.sabotage_char as active_sabotage_char FROM games LEFT JOIN sabotages ON games.active_sabotage_id = sabotages.sabotage_id WHERE game_id = :game_id');
         $stmt->bindValue(':game_id', $game_id);
         $stmt->execute();
         $joc = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -67,40 +68,57 @@ switch ($accio) {
         if (!$joc) {
             echo json_encode(['error' => 'Joc no trobat']);
         } else {
-            // TODO SABOTAGE COMPROBAR SI HACE FALTA HACERLO 
+            // TEST PURPOSES ONLY
+            $player_id = $_SESSION['player_id'];
+            // Comprovar si cal generar un nou sabotatge
+            if ($joc['player1'] && $joc['player2'] && !$joc['winner'] && $player_id == $joc['player1']) {
+                
+                // Temps actual
+                $current_time = time();
 
-            /*
-            // Comprovar si cal generar un nou cercle
-            if ($joc['player1'] && $joc['player2'] && !$joc['winner']) {
-                $temps_actual = time();
-                if (!$joc['circle_visible'] && ($joc['next_circle_time'] === null || $temps_actual >= $joc['next_circle_time'])) {
-                    // Generar una nova posició per al cercle
-                    $maxX = 590; // Amplada de l'àrea de joc (640px) - amplada del cercle (50px)
-                    $maxY = 590; // Alçada de l'àrea de joc (640px) - alçada del cercle (50px)
-                    $circle_x = rand(0, $maxX);
-                    $circle_y = rand(0, $maxY);
+                // Cada 15 segons un sabotatge
+                $timeBetweenSabotages = 10;
+                if ($current_time > ($joc['previous_sabotage_start_time'] + $timeBetweenSabotages)) {
+                    $stmt = $db->prepare('SELECT * FROM sabotages');
+                    $stmt->execute();
+                    $sabotages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                    // Actualitzar la posició del cercle i la visibilitat a la base de dades
-                    $stmt_update = $db->prepare('UPDATE games SET circle_x = :circle_x, circle_y = :circle_y, circle_visible = 1 WHERE game_id = :game_id');
-                    $stmt_update->bindValue(':circle_x', $circle_x);
-                    $stmt_update->bindValue(':circle_y', $circle_y);
-                    $stmt_update->bindValue(':game_id', $game_id);
-                    $stmt_update->execute();
+                    $sabotage_object = $sabotages[rand(0, count($sabotages) - 1)]; // TODO: Mirar si estamos haciendo esto bien. Cada player hara su fetch y generara un rand diferente
+                    $sabotage_id = $sabotage_object['sabotage_id'];
+                    $sabotage_char = $sabotage_object['sabotage_char'];
+                    
+                    $stmt = $db->prepare('UPDATE games SET active_sabotage_id = :active_sabotage_id,
+                        active_sabotage_start_time = :active_sabotage_start_time,
+                        active_sabotage_player = :active_sabotage_player,
+                        active_sabotage_done_time = :active_sabotage_done_time,
+                        previous_sabotage_start_time = :previous_sabotage_start_time 
+                        WHERE game_id = :game_id'
+                    );
+                    $stmt->bindValue(':active_sabotage_id', $sabotage_id);
+                    $stmt->bindValue(':active_sabotage_start_time', $current_time);
+                    $stmt->bindValue(':active_sabotage_player', null);
+                    $stmt->bindValue(':active_sabotage_done_time', null);
+                    $stmt->bindValue(':previous_sabotage_start_time', $joc['active_sabotage_start_time']);
+                    $stmt->bindValue(':game_id', $game_id);
+                    $stmt->execute();
 
-                    // Actualitzar l'objecte joc
-                    $joc['circle_x'] = $circle_x;
-                    $joc['circle_y'] = $circle_y;
-                    $joc['circle_visible'] = 1;
+                    $joc['active_sabotage_id'] = $sabotage_id;
+                    $joc['active_sabotage_char'] = $sabotage_char;
+                    $joc['active_sabotage_start_time'] = $current_time;
+                    $joc['active_sabotage_player'] = null;
+                    $joc['active_sabotage_done_time'] = null;
+                    $joc['previous_sabotage_start_time'] = $joc['active_sabotage_start_time'];
+                    
                 }
             }
-            */
-
+            
             echo json_encode([
                 'player1' => $joc['player1'],
                 'player2' => $joc['player2'],
                 'winner' => $joc['winner'],
                 'progress_player1' => $joc['progress_player1'],
                 'progress_player2' => $joc['progress_player2'],
+                'active_sabotage_char' => $joc['active_sabotage_char']
             ]);
         }
         break;

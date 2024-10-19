@@ -6,10 +6,11 @@ CREATE TABLE IF NOT EXISTS games (
     progress_player1 INTEGER DEFAULT 0,
     progress_player2 INTEGER DEFAULT 0,
     phrase_id TEXT, -- Phrase id for the game
-    sabotage_id TEXT DEFAULT NULL, -- Current sabotage id 
-    sabotage_start_time INTEGER DEFAULT NULL, -- Sabotage start time
-    sabotage_player TEXT DEFAULT NULL, -- Player who sabotages the other player
-    sabotage_done_time INTEGER DEFAULT NULL -- Time when the sabotage is done
+    active_sabotage_id TEXT DEFAULT NULL, -- Current sabotage id 
+    active_sabotage_start_time INTEGER DEFAULT NULL, -- Sabotage start time
+    active_sabotage_player TEXT DEFAULT NULL, -- Player who sabotages the other player
+    active_sabotage_done_time INTEGER DEFAULT NULL, -- Time when the sabotage is done
+    previous_sabotage_start_time INTEGER DEFAULT NULL -- Time the previous sabotage was started
 );
 
 CREATE TABLE IF NOT EXISTS phrases (

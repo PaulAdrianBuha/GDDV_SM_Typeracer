@@ -9,5 +9,10 @@
     - [ ] Tenir en compte la distància (en termes de xarxa) dels jugadors al servidor
 
 
-- [ ] Hacer una tabla de phrases para insertar solo el id en lugar de insertar toda la frase como hacemos ahora
+- [x] Hacer una tabla de phrases para insertar solo el id en lugar de insertar toda la frase como hacemos ahora
+- [ ] Añadir un timer para saber cuanto tiempo llevas y guardar al servidor a la hora de hacer el winner cuanto ha tardado en ganar
 - [ ] Añadir un countdown para poder leer la frase antes de empezar
+- [ ] Arreglar lo de los spans que desplaza.. sí
+- [ ] WPM?
+- [ ] Añadir un countdown para poder leer la frase antes de empezar
+- [ ] Preguntar a Antonio por que en incognito pasa lo del bug del sabotage
