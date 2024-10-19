@@ -7,3 +7,7 @@
 - [ ] Es valorarà
     - [ ] Complexitat d’interaccions i conflictes
     - [ ] Tenir en compte la distància (en termes de xarxa) dels jugadors al servidor
+
+
+- [ ] Hacer una tabla de phrases para insertar solo el id en lugar de insertar toda la frase como hacemos ahora
+- [ ] Añadir un countdown para poder leer la frase antes de empezar

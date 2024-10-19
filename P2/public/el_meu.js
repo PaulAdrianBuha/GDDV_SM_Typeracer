@@ -1,13 +1,14 @@
-let idJoc, idJugador;
+let idJoc, idJugador, phrase;
 let punts = [0, 0];
 let guanyador = null;
 
-const cercle = document.getElementById('cercle');
 const textEstat = document.getElementById('estat');
 const divJoc = document.getElementById('joc');
-const textPuntuacio = document.getElementById('puntuacio');
 const progressPlayer = document.getElementById('progressPlayer');
 const progressOtherPlayer = document.getElementById('progressOtherPlayer');
+const textToType = document.getElementById('texttotype');
+const input = document.getElementById('input');
+const output = document.getElementById('output');
 
 // Connectar al servidor del joc
 function unirseAlJoc() {
@@ -16,6 +17,10 @@ function unirseAlJoc() {
         .then(data => {
             idJoc = data.game_id;
             idJugador = data.player_id;
+            phrase = data.phrase;
+            progressPlayer.max = phrase.length;
+            progressOtherPlayer.max = phrase.length;
+            textToType.textContent = phrase;
             comprovarEstatDelJoc();
         });
 }
@@ -33,15 +38,21 @@ function comprovarEstatDelJoc() {
             punts = joc.points;
             guanyador = joc.winner;
 
-            textPuntuacio.innerText = `Jugador 1: ${punts[0]} | Jugador 2: ${punts[1]}`;
-
             if (guanyador) {
+                if (joc.player1 === idJugador) {
+                    progressPlayer.value = joc.progress_player1;
+                    progressOtherPlayer.value = joc.progress_player2;
+                } else {
+                    progressPlayer.value = joc.progress_player2;
+                    progressOtherPlayer.value = joc.progress_player1;
+                }
+                input.disabled = true;
+                
                 if (guanyador === idJugador) {
                     textEstat.innerText = 'Has guanyat!';
                 } else {
                     textEstat.innerText = 'Has perdut!';
                 }
-                cercle.style.display = 'none';
                 return;
             }
 
@@ -49,7 +60,6 @@ function comprovarEstatDelJoc() {
                 if (joc.player2) {
                     textEstat.innerText = 'Joc en curs...';
                     divJoc.style.display = 'block';
-                    // console.log(joc);
                     progressPlayer.value = joc.progress_player1;
                     progressOtherPlayer.value = joc.progress_player2;
                 } else {
@@ -64,49 +74,14 @@ function comprovarEstatDelJoc() {
                 textEstat.innerText = 'Espectant...';
                 divJoc.style.display = 'block';
             }
-
-            // Gestionar la visualització del cercle
-            if (joc.circle.visible) {
-                mostrarCercle(joc.circle.x, joc.circle.y);
-            } else {
-                amagarCercle();
-            }
-
             setTimeout(comprovarEstatDelJoc, 500);
         });
 }
 
-// Mostrar el cercle a la posició especificada
-function mostrarCercle(x, y) {
-    cercle.style.left = x + 'px';
-    cercle.style.top = y + 'px';
-    cercle.style.display = 'block';
-    cercle.onclick = gestionarClickAlCercle;
-}
-
-// Amagar el cercle
-function amagarCercle() {
-    cercle.style.display = 'none';
-    cercle.onclick = null;
-}
-
-// Gestionar el clic al cercle
-function gestionarClickAlCercle() {
-    fetch(`game.php?action=click&game_id=${idJoc}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-            }
-            // El cercle es mostrarà i els punts s'actualitzaran en la següent comprovació d'estat
-        });
-}
-
-const input = document.getElementById('input');
-const output = document.getElementById('output');
-const textToTypeText = document.getElementById('texttotype').textContent;
 
 input.addEventListener('input', function(event) {
+    const textToTypeText = textToType.textContent;
+
     // Find the number of matching characters
     let text = event.target.value;
     let matchCount = [...text].findIndex((char, i) => char !== textToTypeText[i]); // Find first non-matching (last correct character)
@@ -115,7 +90,9 @@ input.addEventListener('input', function(event) {
     matchCount = matchCount === -1 ? text.length : matchCount;
 
     output.textContent = `You typed: ${event.target.value}`;
-    console.log(matchCount);
+    if (matchCount == textToTypeText.length) {
+        input.disabled = true;
+    }
     fetch(`game.php?action=type&game_id=${idJoc}&progress=${matchCount}`)
         .then(response => response.json())
         .then(data => {

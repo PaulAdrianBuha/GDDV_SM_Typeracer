@@ -11,19 +11,22 @@
 <body>
     <h1 id="estat">Connectant al joc...</h1>
     <div id="joc">
-        <h2 id="puntuacio">Jugador 1: 0 | Jugador 2: 0</h2>
-        <div id="areaDeJoc">
-            <div id="cercle"></div>
-            <p></p>
-            <progress id="progressPlayer" value="0" max="100"></progress>
-            <progress id="progressOtherPlayer" value="0" max="100"></progress>
+        
+        <div id="progressDiv">
+            <h2 class="progressLabel">Tú</h2>
+            <h2 class="progressLabel">Rival</h2>
+            <progress id="progressPlayer" value="0"></progress>
+            <progress id="progressOtherPlayer" value="0"></progress>
         </div>
-        <p id="output">You typed: </p>
-        <p id="texttotype">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas luctus mauris ut viverra tincidunt</p>
-        <input type="text" name="input" id="input"/>
+        
+        <div id="areaDeJoc">
+            <p id="output">You typed: </p>
+            <p id="texttotype"></p>
+            <input type="text" name="input" id="input"/>
+        </div>
     </div>
 
-    <script src="el_meu.js"></script>
+    <script src="el_meu.js" defer></script>
 </body>
 
 </html>
