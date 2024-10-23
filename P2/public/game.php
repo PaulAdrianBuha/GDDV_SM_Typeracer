@@ -71,13 +71,14 @@ switch ($accio) {
             // TEST PURPOSES ONLY
             $player_id = $_SESSION['player_id'];
             // Comprovar si cal generar un nou sabotatge
+            // TODO && $player_id == $joc['player1'] ho estem fent perque només un usuari en generi
             if ($joc['player1'] && $joc['player2'] && !$joc['winner'] && $player_id == $joc['player1']) {
                 
                 // Temps actual
                 $current_time = time();
 
-                // Cada 15 segons un sabotatge
-                $timeBetweenSabotages = 10;
+                // Cada 15 segons un nou sabotatge
+                $timeBetweenSabotages = 15;
                 if ($current_time > ($joc['previous_sabotage_start_time'] + $timeBetweenSabotages)) {
                     $stmt = $db->prepare('SELECT * FROM sabotages');
                     $stmt->execute();
@@ -118,7 +119,9 @@ switch ($accio) {
                 'winner' => $joc['winner'],
                 'progress_player1' => $joc['progress_player1'],
                 'progress_player2' => $joc['progress_player2'],
-                'active_sabotage_char' => $joc['active_sabotage_char']
+                'active_sabotage_char' => $joc['active_sabotage_char'],
+                'active_sabotage_player' => $joc['active_sabotage_player'],
+                'active_sabotage_in_progress' => $joc['active_sabotage_done_time'] + 3 > time()
             ]);
         }
         break;
@@ -182,5 +185,41 @@ switch ($accio) {
         }
 
         echo json_encode(['success' => true]);
+        break;
+    case 'sabotage':
+        $game_id = $_GET['game_id'];
+        $player_id = $_SESSION['player_id'];
+        $sabotage_char = $_GET['sabotage_char'];
+
+        $stmt = $db->prepare('SELECT games.*, sabotages.sabotage_char as active_sabotage_char FROM games LEFT JOIN sabotages ON games.active_sabotage_id = sabotages.sabotage_id WHERE game_id = :game_id');
+        $stmt->bindValue(':game_id', $game_id);
+        $stmt->execute();
+        $joc = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($joc['active_sabotage_done_time'] != null) {
+            echo json_encode(['message' => 'El sabotage ja s\'havia fet']);
+            break;
+        }
+
+        if ($joc['active_sabotage_char'] == null) {
+            echo json_encode(['message' => 'No hi ha cap sabotatge actiu']);
+            break;
+        }
+
+        if ($joc['active_sabotage_char'] != $sabotage_char) {
+            echo json_encode(['message' => 'Tecla de sabotatge caducada']);
+            break;
+        }
+
+        $stmt = $db->prepare('UPDATE games SET
+                        active_sabotage_player = :active_sabotage_player,
+                        active_sabotage_done_time = :active_sabotage_done_time
+                        WHERE game_id = :game_id');
+        $stmt->bindValue(':active_sabotage_player', $player_id);
+        $stmt->bindValue(':active_sabotage_done_time', time());
+        $stmt->bindValue(':game_id', $game_id);
+        $stmt->execute();
+        
+        echo json_encode(['success' => true, 'message' => "Has sabotejat al rival!"]);
         break;
 }

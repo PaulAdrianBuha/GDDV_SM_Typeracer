@@ -1,8 +1,9 @@
 let idJoc, idJugador, phrase;
-let punts = [0, 0];
 let guanyador = null;
+let sabotageCharValue = null;
 
 const textEstat = document.getElementById('estat');
+const textEstat2 = document.getElementById('estat2');
 const divJoc = document.getElementById('joc');
 const divAreaDeJoc = document.getElementById('areaDeJoc');
 
@@ -43,10 +44,8 @@ function comprovarEstatDelJoc() {
                 return;
             }
 
-            punts = joc.points;
             guanyador = joc.winner;
-
-            console.log(joc.active_sabotage_char);
+            sabotageCharValue = joc.active_sabotage_char;
 
             if (guanyador) {
                 if (joc.player1 === idJugador) {
@@ -75,6 +74,26 @@ function comprovarEstatDelJoc() {
                     sabotageChar.textContent = joc.active_sabotage_char;
                     progressPlayer.value = joc.progress_player1;
                     progressOtherPlayer.value = joc.progress_player2;
+                    
+                    if (joc.active_sabotage_player != null) {
+                        if (joc.active_sabotage_player == idJugador) {
+                            // Has sabotejat als altres jugadors durant 3 segons
+                            sabotageChar.style.backgroundColor = "#bedfb3";
+                        } else {
+                            // Has sigut sabotejat per 3 segons
+                            sabotageChar.style.backgroundColor = "#dfb3b3";
+                            if (joc.active_sabotage_in_progress) {
+                                input.disabled = true;
+                            }
+                        }
+                    } else {
+                        if (input.disabled) {
+                            // Ja no estàs sabotejat
+                            input.disabled = false;
+                            input.focus();
+                        }
+                        sabotageChar.style.backgroundColor = "#ffffff";
+                    }
                 } else {
                     textEstat.innerText = 'Ets el Jugador 1. Esperant el Jugador 2...';
                 }
@@ -84,6 +103,26 @@ function comprovarEstatDelJoc() {
                 sabotageChar.textContent = joc.active_sabotage_char;
                 progressPlayer.value = joc.progress_player2;
                 progressOtherPlayer.value = joc.progress_player1;
+
+                if (joc.active_sabotage_player != null) {
+                    if (joc.active_sabotage_player == idJugador) {
+                         // Has sabotejat als altres jugadors durant 3 segons
+                        sabotageChar.style.backgroundColor = "#bedfb3";
+                    } else {
+                         // Has sigut sabotejat per 3 segons
+                        sabotageChar.style.backgroundColor = "#dfb3b3";
+                        if (joc.active_sabotage_in_progress) {
+                            input.disabled = true;
+                        }
+                    }
+                } else {
+                    if (input.disabled) {
+                        // Ja no estàs sabotejat
+                        input.disabled = false;
+                        input.focus();
+                    }
+                    sabotageChar.style.backgroundColor = "#ffffff";
+                }
             } else {
                 textEstat.innerText = 'Espectant...';
                 divJoc.style.display = 'block';
@@ -92,8 +131,24 @@ function comprovarEstatDelJoc() {
         });
 }
 
+function handleSabotageKey() {
+    fetch(`game.php?action=sabotage&game_id=${idJoc}&sabotage_char=${sabotageCharValue}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                textEstat2.innerText = data.message;
+            }
+        });
+}
 
 input.addEventListener('input', function(event) {
+     // Check if the input contains the sabotageCharValue
+     if (sabotageCharValue != null && event.target.value.includes(sabotageCharValue)) {
+        // Prevent the default input behavior
+        event.target.value = event.target.value.replace(new RegExp(`\\${sabotageCharValue}`, 'g'), ''); // Remove sabotage char from the input
+        handleSabotageKey(); // Call your method when the sabotage char is found
+    }
+    
     const textToTypeText = textTypedRight.textContent + textTypedWrong.textContent + textLeft.textContent;
 
     // Find the number of matching characters
@@ -115,7 +170,7 @@ input.addEventListener('input', function(event) {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert(data.error);
+                textEstat2.innerText = data.error;
             }
         });
 });
