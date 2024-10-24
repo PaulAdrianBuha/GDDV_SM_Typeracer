@@ -32,9 +32,12 @@ switch ($accio) {
             $game_id = $joc_existent['game_id'];
             $phrase = $joc_existent['phrase'];
             
-            $stmt = $db->prepare('UPDATE games SET player2 = :player_id WHERE game_id = :game_id');
+            $stmt = $db->prepare('UPDATE games SET player2 = :player_id,
+                    active_sabotage_start_time = :active_sabotage_start_time
+                    WHERE game_id = :game_id');
             $stmt->bindValue(':player_id', $player_id);
             $stmt->bindValue(':game_id', $game_id);
+            $stmt->bindValue(':active_sabotage_start_time', time()); // the game clock starts, in 15s players will be able to sabotage
             $stmt->execute();
         } else {
             // Crear un nou joc com a player1
@@ -47,11 +50,10 @@ switch ($accio) {
             $phrase = $phrase_object['phrase'];
 
             $game_id = uniqid();
-            $stmt = $db->prepare('INSERT INTO games (game_id, player1, phrase_id, previous_sabotage_start_time) VALUES (:game_id, :player_id, :phrase_id, :previous_sabotage_start_time)');
+            $stmt = $db->prepare('INSERT INTO games (game_id, player1, phrase_id) VALUES (:game_id, :player_id, :phrase_id)');
             $stmt->bindValue(':game_id', $game_id);
             $stmt->bindValue(':player_id', $player_id);
             $stmt->bindValue(':phrase_id', $phrase_id);
-            $stmt->bindValue(':previous_sabotage_start_time', time());
             $stmt->execute();
         }
 
@@ -65,25 +67,28 @@ switch ($accio) {
         $stmt->execute();
         $joc = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        $sabotageChanged = false;
+        $current_time = time();
+        $prev_time = $joc['previous_sabotage_start_time'];
+
         if (!$joc) {
             echo json_encode(['error' => 'Joc no trobat']);
         } else {
             $player_id = $_SESSION['player_id'];
-            // Comprovar si cal generar un nou sabotatge
-            // TODO $player_id == $joc['player1'] ho estem fent perque només un usuari en generi
+            //ho estem fent perque només un usuari en generi
             if ($joc['player1'] && $joc['player2'] && !$joc['winner'] && $player_id == $joc['player1']) {
                 
                 // Temps actual
-                $current_time = time();
+                //$current_time = time();
 
                 // Cada 15 segons un nou sabotatge
                 $timeBetweenSabotages = 15;
-                if ($current_time > ($joc['previous_sabotage_start_time'] + $timeBetweenSabotages)) {
-                    $stmt = $db->prepare('SELECT * FROM sabotages');
+                if ($current_time > ($joc['active_sabotage_start_time'] + $timeBetweenSabotages)) {
+                    $stmt = $db->prepare('SELECT * FROM sabotages'); // get list of sabotage symbols
                     $stmt->execute();
                     $sabotages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                    $sabotage_object = $sabotages[rand(0, count($sabotages) - 1)]; // TODO: Mirar si estamos haciendo esto bien. Cada player hara su fetch y generara un rand diferente
+                    $sabotage_object = $sabotages[rand(0, count($sabotages) - 1)]; // choose one at random
                     $sabotage_id = $sabotage_object['sabotage_id'];
                     $sabotage_char = $sabotage_object['sabotage_char'];
                     
@@ -98,7 +103,7 @@ switch ($accio) {
                     $stmt->bindValue(':active_sabotage_start_time', $current_time);
                     $stmt->bindValue(':active_sabotage_player', null);
                     $stmt->bindValue(':active_sabotage_done_time', null);
-                    $stmt->bindValue(':previous_sabotage_start_time', $joc['active_sabotage_start_time']);
+                    $stmt->bindValue(':previous_sabotage_start_time', $joc['active_sabotage_start_time']); // about to be previous
                     $stmt->bindValue(':game_id', $game_id);
                     $stmt->execute();
 
@@ -109,6 +114,7 @@ switch ($accio) {
                     $joc['active_sabotage_done_time'] = null;
                     $joc['previous_sabotage_start_time'] = $joc['active_sabotage_start_time'];
                     
+                    $sabotageChanged = true;
                 }
             }
             
@@ -118,6 +124,9 @@ switch ($accio) {
                 'winner' => $joc['winner'],
                 'progress_player1' => $joc['progress_player1'],
                 'progress_player2' => $joc['progress_player2'],
+                'sabotage_debug1' => $sabotageChanged,
+                'sabotage_debug2' => $current_time,
+                'sabotage_debug3' => $prev_time,
                 'active_sabotage_char' => $joc['active_sabotage_char'],
                 'active_sabotage_player' => $joc['active_sabotage_player'],
                 'active_sabotage_in_progress' => $joc['active_sabotage_done_time'] + 3 > time()
@@ -206,7 +215,10 @@ switch ($accio) {
         }
 
         if ($joc['active_sabotage_char'] != $sabotage_char) {
-            echo json_encode(['message' => 'Tecla de sabotatge caducada']);
+            echo json_encode(['message' => 'Tecla de sabotatge caducada',
+                    'log_active_sabotage_char' => $joc['active_sabotage_char'],
+                    'log_sabotage_char' => $sabotage_char
+                ]);
             break;
         }
 

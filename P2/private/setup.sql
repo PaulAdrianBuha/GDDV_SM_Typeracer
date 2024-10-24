@@ -39,4 +39,7 @@ INSERT INTO sabotages (sabotage_id, sabotage_char) VALUES
     ("1", "$"),
     ("2", "@"),
     ("3", "="),
-    ("4", "+");
+    ("4", "¬");
+    ("5", "¿");
+    ("6", "#");
+    ("7", "|");

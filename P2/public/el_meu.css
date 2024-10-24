@@ -28,7 +28,7 @@
     font-size: 20px;
     white-space: break-spaces;
 }
-#textTypedRight { color: rgb(0, 116, 0); }
+#textTypedRight { background-color: rgb(122, 255, 122); }
 #textTypedWrong { background-color: rgb(255, 122, 122); }
 
 #sabotageChar

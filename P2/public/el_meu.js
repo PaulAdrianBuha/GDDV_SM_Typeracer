@@ -84,13 +84,19 @@ function comprovarEstatDelJoc() {
                             sabotageChar.style.backgroundColor = "#dfb3b3";
                             if (joc.active_sabotage_in_progress) {
                                 input.disabled = true;
+                                textEstat2.innerText = "Has sigut sabotejat!";
                             }
                         }
                     } else {
                         if (input.disabled) {
                             // Ja no estàs sabotejat
                             input.disabled = false;
+                            textEstat2.innerHTML = "&nbsp;";
                             input.focus();
+                        }
+                        else {
+                            // El teu rival ja no està sabotejat
+                            textEstat2.innerHTML = "&nbsp;"; // (Per fer clear del "Has sabotejat al rival!")
                         }
                         sabotageChar.style.backgroundColor = "#ffffff";
                     }
@@ -111,15 +117,21 @@ function comprovarEstatDelJoc() {
                     } else {
                          // Has sigut sabotejat per 3 segons
                         sabotageChar.style.backgroundColor = "#dfb3b3";
-                        if (joc.active_sabotage_in_progress) {
+                        if (joc.active_sabotage_in_progress) { // si l'altre jugador ha arribat primer
                             input.disabled = true;
+                            textEstat2.innerText = "Has sigut sabotejat!";
                         }
                     }
                 } else {
                     if (input.disabled) {
                         // Ja no estàs sabotejat
                         input.disabled = false;
+                        textEstat2.innerHTML = "&nbsp;";
                         input.focus();
+                    }
+                    else {
+                        // El teu rival ja no està sabotejat
+                        textEstat2.innerHTML = "&nbsp;"; // (Per fer clear del "Has sabotejat al rival!")
                     }
                     sabotageChar.style.backgroundColor = "#ffffff";
                 }
@@ -146,7 +158,7 @@ input.addEventListener('input', function(event) {
      if (sabotageCharValue != null && event.target.value.includes(sabotageCharValue)) {
         // Prevent the default input behavior
         event.target.value = event.target.value.replace(new RegExp(`\\${sabotageCharValue}`, 'g'), ''); // Remove sabotage char from the input
-        handleSabotageKey(); // Call your method when the sabotage char is found
+        handleSabotageKey(sabotageCharValue); // Call your method when the sabotage char is found
     }
     
     const textToTypeText = textTypedRight.textContent + textTypedWrong.textContent + textLeft.textContent;
