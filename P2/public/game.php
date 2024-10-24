@@ -68,10 +68,9 @@ switch ($accio) {
         if (!$joc) {
             echo json_encode(['error' => 'Joc no trobat']);
         } else {
-            // TEST PURPOSES ONLY
             $player_id = $_SESSION['player_id'];
             // Comprovar si cal generar un nou sabotatge
-            // TODO && $player_id == $joc['player1'] ho estem fent perque només un usuari en generi
+            // TODO $player_id == $joc['player1'] ho estem fent perque només un usuari en generi
             if ($joc['player1'] && $joc['player2'] && !$joc['winner'] && $player_id == $joc['player1']) {
                 
                 // Temps actual
@@ -171,7 +170,7 @@ switch ($accio) {
             break;
         }
 
-        // TODO Comprovar si hi ha un guanyador, fer servir llargada paraula game i comparar-la amb llargada player
+        // Comprovar si hi ha un guanyador, fer servir llargada paraula game i comparar-la amb llargada player
         if (strlen($joc['phrase']) == $joc['progress_player1']) {
             $stmt = $db->prepare('UPDATE games SET winner = :player_id WHERE game_id = :game_id');
             $stmt->bindValue(':player_id', $joc['player1']);

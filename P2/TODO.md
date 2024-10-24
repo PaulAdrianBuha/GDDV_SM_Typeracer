@@ -1,7 +1,7 @@
 - [ ] Aplicació multiusuari
-    - [ ] Accés remot (des d’altres ordinadors)
-    - [ ] Dos o més usuaris interactuant en paral·lel
-    - [ ] Que els usuaris vegin el mateix al mateix temps
+    - [x] Accés remot (des d’altres ordinadors)
+    - [x] Dos o més usuaris interactuant en paral·lel
+    - [x] Que els usuaris vegin el mateix al mateix temps
     - [ ] Possibilitat de conflictes (recomano que siguin freqüents)
     - [ ] Resolució d’aquests conflictes (més “justa” que ignorar-los)
 - [ ] Es valorarà
@@ -15,4 +15,5 @@
 - [ ] Arreglar lo de los spans que desplaza.. sí
 - [ ] WPM?
 - [ ] Añadir un countdown para poder leer la frase antes de empezar
-- [ ] Preguntar a Antonio por que en incognito pasa lo del bug del sabotage
+- [/] Preguntar a Antonio por que en incognito pasa lo del bug del sabotage
+    - Preguntado, pero nos dijo que se podia mejorar, problema de su código base
