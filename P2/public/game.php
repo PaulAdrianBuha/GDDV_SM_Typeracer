@@ -81,8 +81,8 @@ switch ($accio) {
                 // Temps actual
                 //$current_time = time();
 
-                // Cada 15 segons un nou sabotatge
-                $timeBetweenSabotages = 15;
+                // Cada 7 segons un nou sabotatge
+                $timeBetweenSabotages = 7;
                 if ($current_time > ($joc['active_sabotage_start_time'] + $timeBetweenSabotages)) {
                     $stmt = $db->prepare('SELECT * FROM sabotages'); // get list of sabotage symbols
                     $stmt->execute();
@@ -147,19 +147,6 @@ switch ($accio) {
             echo json_encode(['error' => 'Joc finalitzat o no trobat']);
             break;
         }
-
-        /* TODO APLICAR A TYPE
-        if (!$joc['circle_visible']) {
-            echo json_encode(['error' => 'No hi ha cap cercle per fer clic']);
-            break;
-        }
-
-        // Comprovar si algú ja ha fet clic al cercle
-        if ($joc['next_circle_time'] !== null && $joc['next_circle_time'] > time()) {
-            echo json_encode(['error' => 'El cercle ja ha estat clicat']);
-            break;
-        }
-        */
 
         // Determinar quin jugador ha escrit text
         if ($joc['player1'] === $player_id) {

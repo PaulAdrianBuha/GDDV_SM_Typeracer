@@ -85,11 +85,15 @@ function comprovarEstatDelJoc() {
                             if (joc.active_sabotage_in_progress) {
                                 input.disabled = true;
                                 textEstat2.innerText = "Has sigut sabotejat!";
+                            } else {
+                                input.disabled = false;
+                                textEstat2.innerHTML = "&nbsp;";
+                                input.focus();
                             }
                         }
                     } else {
                         if (input.disabled) {
-                            // Ja no estàs sabotejat
+                            // Ja no estàs sabotejat ()
                             input.disabled = false;
                             textEstat2.innerHTML = "&nbsp;";
                             input.focus();
@@ -120,6 +124,10 @@ function comprovarEstatDelJoc() {
                         if (joc.active_sabotage_in_progress) { // si l'altre jugador ha arribat primer
                             input.disabled = true;
                             textEstat2.innerText = "Has sigut sabotejat!";
+                        } else {
+                            input.disabled = false;
+                            textEstat2.innerHTML = "&nbsp;";
+                            input.focus();
                         }
                     }
                 } else {
@@ -154,12 +162,13 @@ function handleSabotageKey() {
 }
 
 input.addEventListener('input', function(event) {
-     // Check if the input contains the sabotageCharValue
-     if (sabotageCharValue != null && event.target.value.includes(sabotageCharValue)) {
+    // Check if the input contains the sabotageCharValue
+    if (sabotageCharValue != null && event.target.value.includes(sabotageCharValue)) {
         // Prevent the default input behavior
         event.target.value = event.target.value.replace(new RegExp(`\\${sabotageCharValue}`, 'g'), ''); // Remove sabotage char from the input
         handleSabotageKey(sabotageCharValue); // Call your method when the sabotage char is found
     }
+    console.log(event.target.value);
     
     const textToTypeText = textTypedRight.textContent + textTypedWrong.textContent + textLeft.textContent;
 
