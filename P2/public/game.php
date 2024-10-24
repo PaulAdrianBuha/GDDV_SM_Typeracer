@@ -190,6 +190,7 @@ switch ($accio) {
         $stmt->bindValue(':game_id', $game_id);
         $stmt->execute();
         $joc = $stmt->fetch(PDO::FETCH_ASSOC);
+
         
         if ($joc['active_sabotage_done_time'] != null) {
             echo json_encode(['message' => 'El sabotage ja s\'havia fet']);

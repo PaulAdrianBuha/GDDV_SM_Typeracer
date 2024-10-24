@@ -16,6 +16,7 @@ const textTypedWrong = document.getElementById('textTypedWrong');
 const textLeft = document.getElementById('textLeft');
 
 const input = document.getElementById('input');
+const hiddenInput = document.getElementById('hiddenInput');
 const output = document.getElementById('output');
 const sabotageChar = document.getElementById('sabotageChar');
 
@@ -86,6 +87,7 @@ function comprovarEstatDelJoc() {
                                 input.disabled = true;
                                 textEstat2.innerText = "Has sigut sabotejat!";
                             } else {
+                                // Ja no estàs sabotejat (sabotage char changes)
                                 input.disabled = false;
                                 textEstat2.innerHTML = "&nbsp;";
                                 input.focus();
@@ -93,7 +95,7 @@ function comprovarEstatDelJoc() {
                         }
                     } else {
                         if (input.disabled) {
-                            // Ja no estàs sabotejat ()
+                            // Ja no estàs sabotejat (sabotage char changes)
                             input.disabled = false;
                             textEstat2.innerHTML = "&nbsp;";
                             input.focus();
@@ -161,6 +163,8 @@ function handleSabotageKey() {
         });
 }
 
+let accomulatedText = "";
+
 input.addEventListener('input', function(event) {
     // Check if the input contains the sabotageCharValue
     if (sabotageCharValue != null && event.target.value.includes(sabotageCharValue)) {
@@ -168,12 +172,11 @@ input.addEventListener('input', function(event) {
         event.target.value = event.target.value.replace(new RegExp(`\\${sabotageCharValue}`, 'g'), ''); // Remove sabotage char from the input
         handleSabotageKey(sabotageCharValue); // Call your method when the sabotage char is found
     }
-    console.log(event.target.value);
     
     const textToTypeText = textTypedRight.textContent + textTypedWrong.textContent + textLeft.textContent;
 
     // Find the number of matching characters
-    let text = event.target.value;
+    let text = hiddenInput.value + event.target.value;
     let matchCount = [...text].findIndex((char, i) => char !== textToTypeText[i]); // Find first non-matching (last correct character)
 
     // If all characters match (findIndex == -1), set matchCount to the length, otherwise keep it
@@ -183,10 +186,20 @@ input.addEventListener('input', function(event) {
     textTypedWrong.textContent = textToTypeText.substring(matchCount, text.length); // from the last matching char to the current typed char
     textLeft.textContent = textToTypeText.substring(text.length, textToTypeText.length); // from the current typed char to the end
 
+    if (event.target.value.substring(event.target.value.length - 1, event.target.value.length) == " ") {
+        console.log("entra 1");
+        if (textTypedWrong.textContent == "") {
+            console.log("entra 2");
+            hiddenInput.value += event.target.value;
+            event.target.value = "";
+        }
+    }
+    
     output.textContent = `You typed: ${event.target.value}`;
     if (matchCount == textToTypeText.length) {
         input.disabled = true;
     }
+ 
     fetch(`game.php?action=type&game_id=${idJoc}&progress=${matchCount}`)
         .then(response => response.json())
         .then(data => {
