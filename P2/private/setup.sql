@@ -13,9 +13,7 @@ CREATE TABLE IF NOT EXISTS games (
     active_sabotage_player TEXT DEFAULT NULL, -- Player who sabotages the other player
     active_sabotage_done_time_p1 FLOAT DEFAULT NULL, -- Time when the player 1 does their sabotage
     active_sabotage_done_time_p2 FLOAT DEFAULT NULL, -- Time when the player 2 does their sabotage
-    active_sabotage_done_time FLOAT DEFAULT NULL, -- Time when the sabotage is actually processed and takes effect
-    previous_sabotage_start_time FLOAT DEFAULT NULL -- Time the previous sabotage period was started
-    
+    active_sabotage_done_time FLOAT DEFAULT NULL -- Time when the sabotage is actually processed and takes effect
 );
 
 CREATE TABLE IF NOT EXISTS phrases (
