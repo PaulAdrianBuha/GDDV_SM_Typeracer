@@ -272,11 +272,15 @@ switch ($accio) {
             if ($joc['active_sabotage_done_time'] != null && !($joc['active_sabotage_done_time'] + 3 > microtime(true)))
             {
                 $stmt = $db->prepare('UPDATE games SET active_sabotage_id = :active_sabotage_id,
+                        active_sabotage_done_time_p1 = :active_sabotage_done_time_p1,
+                        active_sabotage_done_time_p2 = :active_sabotage_done_time_p2,
                         active_sabotage_player = :active_sabotage_player
                         WHERE game_id = :game_id'
                 );
                 $stmt->bindValue(':active_sabotage_id', null);
                 $stmt->bindValue(':active_sabotage_player', null);
+                $stmt->bindValue(':active_sabotage_done_time_p1', null);
+                $stmt->bindValue(':active_sabotage_done_time_p2', null);
                 $stmt->bindValue(':game_id', $game_id);
                 $stmt->execute();
 
@@ -335,12 +339,12 @@ switch ($accio) {
         }
 
         // Comprovar si hi ha un guanyador, fer servir llargada paraula game i comparar-la amb llargada player
-        if (strlen($joc['phrase']) == $joc['progress_player1']) {
+        if (strlen($joc['phrase']) == $joc['progress_player1'] && $joc['win_time_p1'] == null) {
             $stmt = $db->prepare('UPDATE games SET win_time_p1 = :win_time_p1 WHERE game_id = :game_id');
             $stmt->bindValue(':win_time_p1', microtime(true));
             $stmt->bindValue(':game_id', $game_id);
             $stmt->execute();
-        } elseif (strlen($joc['phrase']) == $joc['progress_player2']) {
+        } elseif (strlen($joc['phrase']) == $joc['progress_player2'] $joc['win_time_p2'] == null) {
             $stmt = $db->prepare('UPDATE games SET win_time_p2 = :win_time_p2 WHERE game_id = :game_id');
             $stmt->bindValue(':win_time_p2', microtime(true));
             $stmt->bindValue(':game_id', $game_id);
@@ -397,7 +401,7 @@ switch ($accio) {
         //$stmt->bindValue(':active_sabotage_player', $player_id);
         $stmt->bindValue(':game_id', $game_id);
         $stmt->execute();
-        
+
         echo json_encode(['success' => true]);
         break;
 }

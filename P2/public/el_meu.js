@@ -199,9 +199,7 @@ input.addEventListener('input', function(event) {
     textLeft.textContent = textToTypeText.substring(text.length, textToTypeText.length); // from the current typed char to the end
 
     if (event.target.value.substring(event.target.value.length - 1, event.target.value.length) == " ") {
-        console.log("entra 1");
         if (textTypedWrong.textContent == "") {
-            console.log("entra 2");
             hiddenInput.value += event.target.value;
             event.target.value = "";
         }
