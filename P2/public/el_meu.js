@@ -160,6 +160,7 @@ function comprovarEstatDelJoc() {
                     textEstat.innerText = 'Has perdut!';
                     divAreaDeJoc.style.backgroundColor = "#dfb3b3"; // red background
                 }
+                
                 return;
             }
             setTimeout(comprovarEstatDelJoc, 500);
