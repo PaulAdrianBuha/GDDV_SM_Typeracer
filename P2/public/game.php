@@ -244,7 +244,7 @@ switch ($accio) {
                     $stmt = $db->prepare('UPDATE games SET active_sabotage_id = :active_sabotage_id,
                         active_sabotage_player = :active_sabotage_player,
                         active_sabotage_done_time = :active_sabotage_done_time,
-                        active_sabotage_start_time = :active_sabotage_start_time,
+                        active_sabotage_start_time = :active_sabotage_start_time
                         WHERE game_id = :game_id'
                     );
                     $stmt->bindValue(':active_sabotage_id', $sabotage_id);
