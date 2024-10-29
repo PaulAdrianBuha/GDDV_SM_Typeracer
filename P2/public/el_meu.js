@@ -48,26 +48,6 @@ function comprovarEstatDelJoc() {
             guanyador = joc.winner;
             sabotageCharValue = joc.active_sabotage_char;
 
-            if (guanyador) {
-                if (joc.player1 === idJugador) {
-                    progressPlayer.value = joc.progress_player1;
-                    progressOtherPlayer.value = joc.progress_player2;
-                } else {
-                    progressPlayer.value = joc.progress_player2;
-                    progressOtherPlayer.value = joc.progress_player1;
-                }
-                input.disabled = true;
-                
-                if (guanyador === idJugador) {
-                    textEstat.innerText = 'Has guanyat!';
-                    divAreaDeJoc.style.backgroundColor = "#bedfb3"; // green background
-                } else {
-                    textEstat.innerText = 'Has perdut!';
-                    divAreaDeJoc.style.backgroundColor = "#dfb3b3"; // red background
-                }
-                return;
-            }
-
             if (joc.player1 === idJugador) {
                 if (joc.player2) {
                     textEstat.innerText = 'Joc en curs...';
@@ -158,6 +138,29 @@ function comprovarEstatDelJoc() {
             } else {
                 textEstat.innerText = 'Espectant...';
                 divJoc.style.display = 'block';
+            }
+            
+            if (guanyador) {
+                if (joc.player1 === idJugador) {
+                    progressPlayer.value = joc.progress_player1;
+                    progressOtherPlayer.value = joc.progress_player2;
+                } else {
+                    progressPlayer.value = joc.progress_player2;
+                    progressOtherPlayer.value = joc.progress_player1;
+                }
+                input.disabled = true;
+                
+                if (guanyador == "DRAW") {
+                    textEstat.innerText = 'Heu empatat!';
+                    divAreaDeJoc.style.backgroundColor = "#b3d5df"; // blue background
+                } else if (guanyador === idJugador) {
+                    textEstat.innerText = 'Has guanyat!';
+                    divAreaDeJoc.style.backgroundColor = "#bedfb3"; // green background
+                } else {
+                    textEstat.innerText = 'Has perdut!';
+                    divAreaDeJoc.style.backgroundColor = "#dfb3b3"; // red background
+                }
+                return;
             }
             setTimeout(comprovarEstatDelJoc, 500);
         });

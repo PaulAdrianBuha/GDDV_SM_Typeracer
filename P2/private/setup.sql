@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS games (
     player1 TEXT,
     player2 TEXT,
     winner TEXT,
+    win_time_p1 FLOAT DEFAULT NULL, -- Time when the player 1 wins
+    win_time_p2 FLOAT DEFAULT NULL, -- Time when the player 2 wins
     progress_player1 INTEGER DEFAULT 0,
     progress_player2 INTEGER DEFAULT 0,
     phrase_id TEXT, -- Phrase id for the game
@@ -13,6 +15,7 @@ CREATE TABLE IF NOT EXISTS games (
     active_sabotage_done_time_p2 FLOAT DEFAULT NULL, -- Time when the player 2 does their sabotage
     active_sabotage_done_time FLOAT DEFAULT NULL, -- Time when the sabotage is actually processed and takes effect
     previous_sabotage_start_time FLOAT DEFAULT NULL -- Time the previous sabotage period was started
+    
 );
 
 CREATE TABLE IF NOT EXISTS phrases (

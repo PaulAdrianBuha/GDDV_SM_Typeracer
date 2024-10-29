@@ -76,7 +76,79 @@ switch ($accio) {
         } else {
             $player_id = $_SESSION['player_id'];
 
-            $wait_for_other_sabotage_time = 1;
+            $wait_for_other_player_time = 1;
+
+            // Manage who wins first --------------------------------------------------------------------------------------------------------------------------
+            $win_diff_to_draw_time = 2;
+            if ($joc['winner'] == null) // If the game hasn't chosen a winner yet
+            {
+                if ($joc['win_time_p1'] != null && $joc['win_time_p2'] != null)
+                {
+                    $stmt = $db->prepare('UPDATE games SET winner = :winner,
+                        win_time_p1 = :win_time_p1,
+                        win_time_p2 = :win_time_p2
+                        WHERE game_id = :game_id'
+                    );
+                    $stmt->bindValue(':win_time_p1', null);
+                    $stmt->bindValue(':win_time_p2', null);
+                    $stmt->bindValue(':game_id', $game_id);
+
+                    if (abs($joc['win_time_p2'] - $joc['win_time_p1']) < $win_diff_to_draw_time) 
+                    {
+                        $stmt->bindValue(':winner', "DRAW");
+                        $joc['winner'] = "DRAW";
+                    }
+                    else
+                    {
+                        if ($joc['win_time_p2'] > $joc['win_time_p1'])
+                        {
+                            $stmt->bindValue(':winner', $joc['player1']);
+                            $joc['winner'] = $joc['player1'];
+                        }
+                        else //($joc['win_time_p2'] < $joc['win_time_p1'])
+                        {
+                            $stmt->bindValue(':winner', $joc['player2']);
+                            $joc['winner'] = $joc['player2'];
+                        }
+                    } 
+
+                    $stmt->execute();
+                }
+                elseif ($joc['win_time_p1'] == null && $joc['win_time_p2'] != null) // Check if p2 already sabotaged but not enough time elapsed to determine if the p1 also sabotages
+                {
+                    if ($current_time > $joc['win_time_p2'] + $wait_for_other_player_time) //TODO: Testear esto
+                    {
+                        $stmt = $db->prepare('UPDATE games SET winner = :winner,
+                            win_time_p2 = :win_time_p2
+                            WHERE game_id = :game_id'
+                        );
+                        $stmt->bindValue(':winner', $joc['player2']);
+                        $stmt->bindValue(':win_time_p2', null);
+                        $stmt->bindValue(':game_id', $game_id);
+                        $stmt->execute();
+
+                        $joc['winner'] = $joc['player2'];
+                    }
+                }
+                elseif ($joc['win_time_p1'] != null && $joc['win_time_p2'] == null) // Check if p1 already sabotaged but not enough time elapsed to determine if the p2 also sabotages
+                {
+                    if ($current_time > $joc['win_time_p1'] + $wait_for_other_player_time) //TODO: Testear esto
+                    {
+                        $stmt = $db->prepare('UPDATE games SET winner = :winner,
+                            win_time_p1 = :win_time_p1
+                            WHERE game_id = :game_id'
+                        );
+                        $stmt->bindValue(':winner', $joc['player1']);
+                        $stmt->bindValue(':win_time_p1', null);
+                        $stmt->bindValue(':game_id', $game_id);
+                        $stmt->execute();
+
+                        $joc['winner'] = $joc['player1'];
+                    }
+                }
+            }
+
+            // Manage who sabotages first --------------------------------------------------------------------------------------------------------------------------
             $sabotage_diff_to_draw_time = 1;
             if ($joc['active_sabotage_done_time'] == null) // If the game hasn't chosen a sabotage winner yet
             {
@@ -118,7 +190,7 @@ switch ($accio) {
                 }
                 elseif ($joc['active_sabotage_done_time_p1'] == null && $joc['active_sabotage_done_time_p2'] != null) // Check if p2 already sabotaged but not enough time elapsed to determine if the p1 also sabotages
                 {
-                    if ($current_time > $joc['active_sabotage_done_time_p2'] + $wait_for_other_sabotage_time) //TODO: Testear esto
+                    if ($current_time > $joc['active_sabotage_done_time_p2'] + $wait_for_other_player_time) //TODO: Testear esto
                     {
                         $stmt = $db->prepare('UPDATE games SET active_sabotage_player = :active_sabotage_player,
                             active_sabotage_done_time = :active_sabotage_done_time,
@@ -137,7 +209,7 @@ switch ($accio) {
                 }
                 elseif ($joc['active_sabotage_done_time_p1'] != null && $joc['active_sabotage_done_time_p2'] == null) // Check if p1 already sabotaged but not enough time elapsed to determine if the p2 also sabotages
                 {
-                    if ($current_time > $joc['active_sabotage_done_time_p1'] + $wait_for_other_sabotage_time) //TODO: Testear esto
+                    if ($current_time > $joc['active_sabotage_done_time_p1'] + $wait_for_other_player_time) //TODO: Testear esto
                     {
                         $stmt = $db->prepare('UPDATE games SET active_sabotage_player = :active_sabotage_player,
                             active_sabotage_done_time = :active_sabotage_done_time,
@@ -156,9 +228,10 @@ switch ($accio) {
                 }
             }
             
-            //ho estem fent perque només un usuari en generi sabotatge
+            // Update sabotage char --------------------------------------------------------------------------------------------------------------------------------
+            // Only one of the players generates a new symbol
             if ($joc['player1'] && $joc['player2'] && !$joc['winner'] && $player_id == $joc['player1']) {
-                // Cada 10 segons un nou sabotatge
+                // Every 10 seconds a new sabotage char is generated
                 $timeBetweenSabotages = max(10, $joc['active_sabotage_done_time'] + 3 - $joc['active_sabotage_start_time']);
                 if ($current_time > ($joc['active_sabotage_start_time'] + $timeBetweenSabotages)) {
                     $stmt = $db->prepare('SELECT * FROM sabotages'); // get list of sabotage symbols
@@ -263,18 +336,16 @@ switch ($accio) {
 
         // Comprovar si hi ha un guanyador, fer servir llargada paraula game i comparar-la amb llargada player
         if (strlen($joc['phrase']) == $joc['progress_player1']) {
-            $stmt = $db->prepare('UPDATE games SET winner = :player_id WHERE game_id = :game_id');
-            $stmt->bindValue(':player_id', $joc['player1']);
+            $stmt = $db->prepare('UPDATE games SET win_time_p1 = :win_time_p1 WHERE game_id = :game_id');
+            $stmt->bindValue(':win_time_p1', microtime(true));
             $stmt->bindValue(':game_id', $game_id);
             $stmt->execute();
         } elseif (strlen($joc['phrase']) == $joc['progress_player2']) {
-            $stmt = $db->prepare('UPDATE games SET winner = :player_id WHERE game_id = :game_id');
-            $stmt->bindValue(':player_id', $joc['player2']);
+            $stmt = $db->prepare('UPDATE games SET win_time_p2 = :win_time_p2 WHERE game_id = :game_id');
+            $stmt->bindValue(':win_time_p2', microtime(true));
             $stmt->bindValue(':game_id', $game_id);
             $stmt->execute();
         }
-
-        echo json_encode(['success' => true]);
         break;
 
     case 'sabotage':
@@ -325,7 +396,5 @@ switch ($accio) {
         //$stmt->bindValue(':active_sabotage_player', $player_id);
         $stmt->bindValue(':game_id', $game_id);
         $stmt->execute();
-        
-        //echo json_encode(['success' => true, 'message' => "Has sabotejat al rival!"]);
         break;
 }
