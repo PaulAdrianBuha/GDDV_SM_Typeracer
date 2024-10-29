@@ -77,9 +77,14 @@ function comprovarEstatDelJoc() {
                     progressOtherPlayer.value = joc.progress_player2;
                     
                     if (joc.active_sabotage_player != null) {
-                        if (joc.active_sabotage_player == idJugador) {
+                        if (joc.active_sabotage_player == "DRAW") {
+                            // Els dos jugadors han arribat a sabotejar gairebé al mateix temps
+                            sabotageChar.style.backgroundColor = "#b3d5df";
+                            textEstat2.innerText = "Has aturat el sabotatge del rival!";
+                        } else if (joc.active_sabotage_player == idJugador) {
                             // Has sabotejat als altres jugadors durant 3 segons
                             sabotageChar.style.backgroundColor = "#bedfb3";
+                            textEstat2.innerText = "Has sabotejat al rival!";
                         } else {
                             // Has sigut sabotejat per 3 segons
                             sabotageChar.style.backgroundColor = "#dfb3b3";
@@ -117,9 +122,14 @@ function comprovarEstatDelJoc() {
                 progressOtherPlayer.value = joc.progress_player1;
 
                 if (joc.active_sabotage_player != null) {
-                    if (joc.active_sabotage_player == idJugador) {
+                    if (joc.active_sabotage_player == "DRAW") {
+                        // Els dos jugadors han arribat a sabotejar gairebé al mateix temps
+                        sabotageChar.style.backgroundColor = "#b3d5df";
+                        textEstat2.innerText = "Has aturat el sabotatge del rival!";
+                    } else if (joc.active_sabotage_player == idJugador) {
                          // Has sabotejat als altres jugadors durant 3 segons
                         sabotageChar.style.backgroundColor = "#bedfb3";
+                        textEstat2.innerText = "Has sabotejat al rival!";
                     } else {
                          // Has sigut sabotejat per 3 segons
                         sabotageChar.style.backgroundColor = "#dfb3b3";
@@ -154,13 +164,13 @@ function comprovarEstatDelJoc() {
 }
 
 function handleSabotageKey() {
-    fetch(`game.php?action=sabotage&game_id=${idJoc}&sabotage_char=${sabotageCharValue}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                textEstat2.innerText = data.message;
-            }
-        });
+    fetch(`game.php?action=sabotage&game_id=${idJoc}&sabotage_char=${sabotageCharValue}`);
+        // .then(response => response.json())
+        // .then(data => {
+        //     if (data.message) {
+        //         textEstat2.innerText = data.message;
+        //     }
+        // });
 }
 
 let accomulatedText = "";
