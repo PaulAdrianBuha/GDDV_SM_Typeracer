@@ -78,7 +78,7 @@ switch ($accio) {
             $wait_for_other_player_time = 1;
 
             // Manage who wins first --------------------------------------------------------------------------------------------------------------------------
-            $win_diff_to_draw_time = 2;
+            $win_diff_to_draw_time = 1;
             if ($joc['winner'] == null) // If the game hasn't chosen a winner yet
             {
                 if ($joc['win_time_p1'] != null && $joc['win_time_p2'] != null)
