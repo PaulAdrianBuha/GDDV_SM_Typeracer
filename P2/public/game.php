@@ -96,15 +96,11 @@ switch ($accio) {
                     
                     $stmt = $db->prepare('UPDATE games SET active_sabotage_id = :active_sabotage_id,
                         active_sabotage_start_time = :active_sabotage_start_time,
-                        active_sabotage_player = :active_sabotage_player,
-                        active_sabotage_done_time = :active_sabotage_done_time,
                         previous_sabotage_start_time = :previous_sabotage_start_time 
                         WHERE game_id = :game_id'
                     );
                     $stmt->bindValue(':active_sabotage_id', $sabotage_id);
                     $stmt->bindValue(':active_sabotage_start_time', $current_time);
-                    $stmt->bindValue(':active_sabotage_player', null);
-                    $stmt->bindValue(':active_sabotage_done_time', null);
                     $stmt->bindValue(':previous_sabotage_start_time', $joc['active_sabotage_start_time']); // about to be previous
                     $stmt->bindValue(':game_id', $game_id);
                     $stmt->execute();
@@ -112,8 +108,6 @@ switch ($accio) {
                     $joc['active_sabotage_id'] = $sabotage_id;
                     $joc['active_sabotage_char'] = $sabotage_char;
                     $joc['active_sabotage_start_time'] = $current_time;
-                    $joc['active_sabotage_player'] = null;
-                    $joc['active_sabotage_done_time'] = null;
                     $joc['previous_sabotage_start_time'] = $joc['active_sabotage_start_time'];
                     
                     $sabotageChanged = true;
@@ -199,7 +193,22 @@ switch ($accio) {
                     }
                 }
             }
-            
+
+            $active_sabotage_in_progress = $joc['active_sabotage_done_time'] + 3 > microtime(true);
+            if (!$active_sabotage_in_progress)
+            {
+                $stmt = $db->prepare('UPDATE games SET active_sabotage_player = :active_sabotage_player,
+                        active_sabotage_done_time = :active_sabotage_done_time
+                        WHERE game_id = :game_id'
+                );
+                $stmt->bindValue(':active_sabotage_player', null);
+                $stmt->bindValue(':active_sabotage_done_time', null);
+                $stmt->bindValue(':game_id', $game_id);
+                $stmt->execute();
+
+                $joc['active_sabotage_player'] = null;
+                $joc['active_sabotage_done_time'] = null;
+            }
             
             echo json_encode([
                 'player1' => $joc['player1'],
@@ -212,7 +221,7 @@ switch ($accio) {
                 'sabotage_debug3' => $prev_time,
                 'active_sabotage_char' => $joc['active_sabotage_char'],
                 'active_sabotage_player' => $joc['active_sabotage_player'],
-                'active_sabotage_in_progress' => ($joc['active_sabotage_done_time'] + 3 > microtime(true))
+                'active_sabotage_in_progress' => ($active_sabotage_in_progress)
             ]);
         }
         break;
