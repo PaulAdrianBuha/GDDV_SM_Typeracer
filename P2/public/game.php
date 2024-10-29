@@ -23,7 +23,7 @@ switch ($accio) {
         $phrase = null;
 
         // Intentar unir-se a un joc existent on player2 sigui null
-        $stmt = $db->prepare('SELECT games.game_id, phrases.phrase_id, phrases.phrase FROM games LEFT JOIN phrases ON games.phrase_id = phrases.phrase_id WHERE player2 IS NULL LIMIT 1');
+        $stmt = $db->prepare('SELECT games.game_id, phrases.phrase_id, phrases.phrase FROM games LEFT JOIN phrases ON games.phrase_id = phrases.phrase_id WHERE games.player2 IS NULL LIMIT 1');
         $stmt->execute();
         $joc_existent = $stmt->fetch(PDO::FETCH_ASSOC);
 
