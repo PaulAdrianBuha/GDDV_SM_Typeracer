@@ -168,16 +168,14 @@ function comprovarEstatDelJoc() {
 }
 
 function handleSabotageKey() {
-    fetch(`game.php?action=sabotage&game_id=${idJoc}&sabotage_char=${sabotageCharValue}`);
-        // .then(response => response.json())
-        // .then(data => {
-        //     if (data.message) {
-        //         textEstat2.innerText = data.message;
-        //     }
-        // });
+    fetch(`game.php?action=sabotage&game_id=${idJoc}&sabotage_char=${sabotageCharValue}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                textEstat2.innerText = data.message;
+            }
+        });
 }
-
-let accomulatedText = "";
 
 input.addEventListener('input', function(event) {
     // Check if the input contains the sabotageCharValue

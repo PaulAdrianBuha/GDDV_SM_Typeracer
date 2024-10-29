@@ -346,6 +346,7 @@ switch ($accio) {
             $stmt->bindValue(':game_id', $game_id);
             $stmt->execute();
         }
+        echo json_encode(['success' => true]);
         break;
 
     case 'sabotage':
@@ -396,5 +397,7 @@ switch ($accio) {
         //$stmt->bindValue(':active_sabotage_player', $player_id);
         $stmt->bindValue(':game_id', $game_id);
         $stmt->execute();
+        
+        echo json_encode(['success' => true]);
         break;
 }
