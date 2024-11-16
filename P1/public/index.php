@@ -284,6 +284,8 @@ function postLogin($template, $configuration, $parameters) {
     printHtml($template, $configuration);
 }
 
+// (VIEW) Executed after the user has executed 2FA
+// Uses plantilla_home if the user is verified and plantilla_reverify if not
 function postVerifyLogin2FA($template, $configuration, $parameters) {
     $result = $tfa->verifyCode($secret, $parameters['verification']);
     if ($result) {
@@ -295,7 +297,6 @@ function postVerifyLogin2FA($template, $configuration, $parameters) {
         $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
         printHtml($template, $configuration);
     }
-    
 }
 
 // (VIEW) Executed after submitting the account recovery form

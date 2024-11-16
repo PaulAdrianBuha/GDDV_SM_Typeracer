@@ -38,8 +38,10 @@ function unirseAlJoc() {
 }
 
 // Comprovar l'estat del joc cada mig segon
+var delay = 0;
 function comprovarEstatDelJoc() {
-    fetch(`game.php?action=status&game_id=${idJoc}`)
+    var time1 = Date.now();
+    fetch(`game.php?action=status&game_id=${idJoc}&delay=${delay}`)
         .then(response => response.json())
         .then(joc => {
             if (joc.error) {
@@ -50,10 +52,11 @@ function comprovarEstatDelJoc() {
             guanyador = joc.winner;
             sabotageCharValue = joc.active_sabotage_char;
 
-            var current_time = Date.now();
+            var time2 = Date.now();
+            delay = time2 - time1;
             
-            latencyPlayer.innerText = current_time - Math.round(joc.time * 1000) + " ms";
-            console.log(current_time, " ", joc.time * 1000, " ", latencyPlayer.innerText);
+            latencyPlayer.innerText = delay + " ms";
+            console.log(delay, " ", joc.time * 1000, " ", latencyPlayer.innerText);
 
             if (joc.player1 === idJugador) {
                 if (joc.player2) {
