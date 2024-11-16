@@ -15,6 +15,15 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+# https://robthree.github.io/TwoFactorAuth/getting-started.html
+use RobThree\Auth\TwoFactorAuth;
+use RobThree\Auth\Providers\Qr\BaconQrCodeProvider; // if using Bacon
+require '../TwoFactorAuth/TwoFactorAuth.php';
+require '../TwoFactorAuth/Providers/BaconQrCodeProvider.php';
+$secret = $tfa->createSecret();
+$tfa = new TwoFactorAuth(new BaconQrCodeProvider()); // using Bacon
+
+
 // Incloure lla libreria PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -227,17 +236,30 @@ function postLogin($template, $configuration, $parameters) {
             $configuration['{LOGIN_LOGOUT_URL}'] = '/';
             $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($result_row['user_email']);
         } else {
-            $template = 'loggedin';
-            createSession($result_row);
-
-            $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
-            $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
-            $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
+            /*
+            $sql = 'SELECT * FROM user_secrets WHERE user_id = :user_id';
+            $query = $GLOBALS["db"]->prepare($sql);
+            $query->bindValue(':user_name', $result_row['user_id']);
+            $query->execute();
+            $result_row = $query->fetchAll(PDO::FETCH_ASSOC);*/
+            $secret = $tfa->createSecret();
+            
+            
         }
     } else {
         //$template = 'home';
         $configuration['{FEEDBACK}'] = '<mark>ERROR: Usuari desconegut o contrasenya incorrecta</mark>';
     }
+    printHtml($template, $configuration);
+}
+
+function postVerifyLogin($template, $configuration, $parameters) {
+    $template = 'loggedin';
+    createSession($result_row);
+
+    $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
+    $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
+    $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
     printHtml($template, $configuration);
 }
 
