@@ -7,6 +7,9 @@ const textEstat2 = document.getElementById('estat2');
 const divJoc = document.getElementById('joc');
 const divAreaDeJoc = document.getElementById('areaDeJoc');
 
+const latencyPlayer = document.getElementById('latencyPlayer');
+const latencyOtherPlayer = document.getElementById('latencyOtherPlayer');
+
 const progressPlayer = document.getElementById('progressPlayer');
 const progressOtherPlayer = document.getElementById('progressOtherPlayer');
 
@@ -17,7 +20,6 @@ const textLeft = document.getElementById('textLeft');
 
 const input = document.getElementById('input');
 const hiddenInput = document.getElementById('hiddenInput');
-const output = document.getElementById('output');
 const sabotageChar = document.getElementById('sabotageChar');
 
 // Connectar al servidor del joc
@@ -47,6 +49,8 @@ function comprovarEstatDelJoc() {
 
             guanyador = joc.winner;
             sabotageCharValue = joc.active_sabotage_char;
+
+            latencyPlayer.innerText = joc.time + " ms";
 
             if (joc.player1 === idJugador) {
                 if (joc.player2) {
@@ -205,7 +209,6 @@ input.addEventListener('input', function(event) {
         }
     }
     
-    output.textContent = `You typed: ${event.target.value}`;
     if (matchCount == textToTypeText.length) {
         input.disabled = true;
     }

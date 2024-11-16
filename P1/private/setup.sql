@@ -13,3 +13,9 @@ CREATE TABLE IF NOT EXISTS cookies (
     cookie varchar(255) PRIMARY KEY,
     user_id INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS user_secrets(
+    secret_id INTEGER PRIMARY KEY,
+    user_id INTEGER,
+    secret varchar(255)
+);

@@ -5,7 +5,7 @@
     - [x] Possibilitat de conflictes (recomano que siguin freqüents)
     - [x] Resolució d’aquests conflictes (més “justa” que ignorar-los)
 - [ ] Es valorarà
-    - [ ] Complexitat d’interaccions i conflictes
+    - [x] Complexitat d’interaccions i conflictes
     - [ ] Tenir en compte la distància (en termes de xarxa) dels jugadors al servidor
 
 
@@ -17,3 +17,5 @@
 - [x] Preguntar a Antonio por que en incognito pasa lo del bug del sabotage
 - [ ] Possible problema con el active_sabotage_player? El valor se pone a null cada game tick pero se detectan las colisiones mirando si ya existe uno.
         Puede pasar que el J1 y el J2 saboteen a la vez pero uno de ellos llegue justo despues del game tick y le deje sabotear igualmente.
+
+

@@ -15,10 +15,17 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Incloure la llibreria de Google2FA
+use PragmaRX\Google2FAQRCode\Google2FA;
+
 // Incloure lla libreria PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
+
+$google2fa = new Google2FA();
+echo $google2fa->generateSecretKey();
+die();
 
 require '../PHPMailer/src/Exception.php';
 require '../PHPMailer/src/PHPMailer.php';
@@ -182,6 +189,8 @@ function postRegister($template, $configuration, $parameters) {
                 . htmlentities($parameters['user_name']) . '</b> La contrasenya ha de ser de 8 caràcters com a mínim</mark>';
     } else if ($parameters['user_password'] != $parameters['user_repeat_password']) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: Les contrasenyes no coincideixen</mark>";
+    } else if (($pwnedTimes = isPasswordPwned($parameters['user_password'])) > 0) {
+        $configuration['{FEEDBACK}'] = "<mark>ERROR: Prova una contrasenya més segura. La contrasenya ha estat leakejada " . $pwnedTimes . " vegades.</mark>";
     } else {
         $template = 'reverify';
          // Generamos un codigo random para verificar que enviaremos al correo y asociamos al user en la base de datos
@@ -208,6 +217,29 @@ function postRegister($template, $configuration, $parameters) {
         }
     }
     printHtml($template, $configuration);
+}
+
+function isPasswordPwned($userPassword) {
+    // Obtenir el password en sha1
+    $sha1_password = strtoupper(sha1($userPassword));
+    // Obtenir els 5 primers caràcters
+    $prefix = substr($sha1_password, 0, 5);
+    // La resta és suffix
+    $suffix = substr($sha1_password, 5);
+    $url = "https://api.pwnedpasswords.com/range/{$prefix}";
+    $response = file_get_contents($url);
+    
+    $lines = explode("\n", $response);
+    foreach ($lines as $line) {
+        // Cada linia té el suffix en hash i quantes vegades s'ha leakejat aquest
+        list($hash_suffix, $count) = explode(":", $line);
+
+        // Comprovar quantes vegades s'ha leakejat el mateix suffix que correspon al que ha entrat l'usuari
+        if (strtoupper($hash_suffix) === $suffix) {
+            return (int)$count;
+        }
+    }
+    return 0;
 }
 
 // (VIEW) Executed after submitting the login form

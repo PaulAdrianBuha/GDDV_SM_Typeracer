@@ -291,12 +291,13 @@ switch ($accio) {
                 'winner' => $joc['winner'],
                 'progress_player1' => $joc['progress_player1'],
                 'progress_player2' => $joc['progress_player2'],
-                'sabotage_debug1' => $sabotageChanged,
-                'sabotage_debug2' => $current_time,
+                'time' => $current_time,
                 'active_sabotage_char' => $joc['active_sabotage_char'],
                 'active_sabotage_player' => $joc['active_sabotage_player'],
                 'active_sabotage_in_progress' => $joc['active_sabotage_done_time'] != null
             ]);
+            // 1731776675.294753
+            // 1731776675.842811
         }
         break;
 

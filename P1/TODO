@@ -12,10 +12,10 @@
 [x] - guardar las contraseñas en el servidor
     [x] - longitud minima
     [x] - "hasheadas" con salt y usando PBKDF2 o equivalente
-[ ] - cookies
-    [ ] - crear cookie de sesión
-    [ ] - mantener la sesión con cookie
-    [ ] - que los usuarios no las puedan inventar/manipular
+[x] - cookies
+    [x] - crear cookie de sesión
+    [x] - mantener la sesión con cookie
+    [x] - que los usuarios no las puedan inventar/manipular
         - tal vez utilizar el hash de la contraseña mismo + algo mas para el hash de la cookie
-    [ ] - sistema "remember me"? (alargar el lifespan de la cookie)
+    [x] - sistema "remember me"? (alargar el lifespan de la cookie)
 [x] - CAPTCHA / **verificación pre-registro** / Pwned Passwords / 2FA
