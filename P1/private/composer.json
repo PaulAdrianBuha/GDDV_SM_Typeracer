@@ -1,0 +1,5 @@
+{
+    "require": {
+        "pragmarx/google2fa-qrcode": "^3.0"
+    }
+}
