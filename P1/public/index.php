@@ -82,6 +82,8 @@ if (isset($parameters['page'])) {
 } else if (isset($parameters['changePasswordConfirm'])) {
     // When user confirms the password change
     changePassword($template, $configuration, $parameters);
+} else if (isset($parameters['twoFactor'])) {
+    postVerifyLogin2FA($template, $configuration, $parameters); 
 } else {
     // if the session is still open, directly login the player
     if (isset($_COOKIE['SessionCookie'])) { 
@@ -271,7 +273,7 @@ function postLogin($template, $configuration, $parameters) {
             $query->bindValue(':user_id', $result_row['user_id']);
             $query->bindValue(':secret_text', $secret);
             $query->execute();
-            $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resend2FAVerifyEmail=true&user_secret=" . $secret;
+            send2FAEmail($result_row['user_email'], $secret);
         }
     } else {
         $configuration['{FEEDBACK}'] = '<mark>ERROR: Usuari desconegut o contrasenya incorrecta</mark>';
@@ -280,7 +282,7 @@ function postLogin($template, $configuration, $parameters) {
 }
 
 // (VIEW) Executed after the user has entered 2FA
-// Uses plantilla_home if the user is verified and plantilla_reverify if not
+// Uses platilla_loggedin if the user has verified the account otherwise plantilla_home
 function postVerifyLogin2FA($template, $configuration, $parameters) {
     $sql = 'SELECT * FROM user_secrets WHERE user_id = :user_id AND secret_text = :secret_text';
     $query = $GLOBALS["db"]->prepare($sql);
@@ -290,7 +292,7 @@ function postVerifyLogin2FA($template, $configuration, $parameters) {
     $result_rows = $query->fetchAll(PDO::FETCH_ASSOC);
 
     foreach($result_rows as $result_row) {
-        $verificationResult = $tfa->verifyCode($result_row['secret_text'], $parameters['verification']);
+        $verificationResult = $tfa->verifyCode($result_row['secret_text'], $parameters['user_verification_code']);
         if ($verificationResult) {
             $template = 'loggedin';
             $sql = 'SELECT * FROM users WHERE (user_email = :user_verification_email)';

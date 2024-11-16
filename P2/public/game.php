@@ -287,21 +287,24 @@ switch ($accio) {
                 $joc['active_sabotage_player'] = null;
             }
 
-            // Update latency/delay value for this player ---------------------------------------------------------
-            if ($player_id == $joc['player1']) // is player1
+            // Update latency/delay value for this player (once every 5 ticks) --------------------------------------
+            if ($delay != -1) // -1 is sent from the player every game tick non-multiple of 5
             {
-                $stmt = $db->prepare('UPDATE games SET delay_player1 = :delay_player WHERE game_id = :game_id');
-                $joc['delay_player1'] = $delay; // Maybe dangerous to update its value before execute?
+                if ($player_id == $joc['player1']) // is player1
+                {
+                    $stmt = $db->prepare('UPDATE games SET delay_player1 = :delay_player WHERE game_id = :game_id');
+                    $joc['delay_player1'] = $delay; // Maybe dangerous to update its value before execute?
+                }
+                elseif ($player_id == $joc['player2']) // is player2
+                {
+                    $stmt = $db->prepare('UPDATE games SET delay_player2 = :delay_player WHERE game_id = :game_id');
+                    $joc['delay_player2'] = $delay; // Maybe dangerous to update its value before execute?
+                }
+                
+                $stmt->bindValue(':delay_player', $delay);
+                $stmt->bindValue(':game_id', $game_id);
+                $stmt->execute();
             }
-            elseif ($player_id == $joc['player2']) // is player2
-            {
-                $stmt = $db->prepare('UPDATE games SET delay_player2 = :delay_player WHERE game_id = :game_id');
-                $joc['delay_player2'] = $delay; // Maybe dangerous to update its value before execute?
-            }
-            
-            $stmt->bindValue(':delay_player', $delay);
-            $stmt->bindValue(':game_id', $game_id);
-            $stmt->execute();
             
 
             echo json_encode([
