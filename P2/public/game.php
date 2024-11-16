@@ -62,7 +62,9 @@ switch ($accio) {
 
     case 'status':
         $game_id = $_GET['game_id'];
-        $stmt = $db->prepare('SELECT games.*, sabotages.sabotage_char as active_sabotage_char FROM games LEFT JOIN sabotages ON games.active_sabotage_id = sabotages.sabotage_id WHERE game_id = :game_id');
+        $delay = $_GET['delay'];
+        $stmt = $db->prepare('SELECT games.*, sabotages.sabotage_char as active_sabotage_char FROM games LEFT JOIN sabotages
+                ON games.active_sabotage_id = sabotages.sabotage_id WHERE game_id = :game_id');
         $stmt->bindValue(':game_id', $game_id);
         $stmt->execute();
         $joc = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -284,20 +286,35 @@ switch ($accio) {
                 $joc['active_sabotage_char'] = null;
                 $joc['active_sabotage_player'] = null;
             }
+
+            // Update latency/delay value for this player ---------------------------------------------------------
+            if ($player_id == $joc['player1']) // is player1
+            {
+                $stmt = $db->prepare('UPDATE games SET delay_player1 = :delay_player WHERE game_id = :game_id');
+                $joc['delay_player1'] = $delay; // Maybe dangerous to update its value before execute?
+            }
+            elseif ($player_id == $joc['player2']) // is player2
+            {
+                $stmt = $db->prepare('UPDATE games SET delay_player2 = :delay_player WHERE game_id = :game_id');
+                $joc['delay_player2'] = $delay; // Maybe dangerous to update its value before execute?
+            }
             
+            $stmt->bindValue(':delay_player', $delay);
+            $stmt->bindValue(':game_id', $game_id);
+            $stmt->execute();
+            
+
             echo json_encode([
                 'player1' => $joc['player1'],
                 'player2' => $joc['player2'],
                 'winner' => $joc['winner'],
                 'progress_player1' => $joc['progress_player1'],
                 'progress_player2' => $joc['progress_player2'],
-                'time' => $current_time,
+                'rival_delay' => ($player_id == $joc['player1']) ? $joc['delay_player2'] : $joc['delay_player1'],
                 'active_sabotage_char' => $joc['active_sabotage_char'],
                 'active_sabotage_player' => $joc['active_sabotage_player'],
                 'active_sabotage_in_progress' => $joc['active_sabotage_done_time'] != null
             ]);
-            // 1731776675.294753
-            // 1731776675.842811
         }
         break;
 

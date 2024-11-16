@@ -264,39 +264,51 @@ function postLogin($template, $configuration, $parameters) {
             $configuration['{LOGIN_LOGOUT_URL}'] = '/';
             $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($result_row['user_email']);
         } else {
-            /*
-            $sql = 'SELECT * FROM user_secrets WHERE user_id = :user_id';
-            $query = $GLOBALS["db"]->prepare($sql);
-            $query->bindValue(':user_name', $result_row['user_id']);
-            $query->execute();
-            $result_row = $query->fetchAll(PDO::FETCH_ASSOC);*/
+            $template = 'two_factor';
             $secret = $tfa->createSecret();
             $sql = 'INSERT INTO user_secrets VALUES (user_id, secret_text) = (:user_id, :secret_text)';
             $query = $GLOBALS["db"]->prepare($sql);
             $query->bindValue(':user_id', $result_row['user_id']);
             $query->bindValue(':secret_text', $secret);
             $query->execute();
+            $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resend2FAVerifyEmail=true&user_secret=" . $secret;
         }
     } else {
-        //$template = 'home';
         $configuration['{FEEDBACK}'] = '<mark>ERROR: Usuari desconegut o contrasenya incorrecta</mark>';
     }
     printHtml($template, $configuration);
 }
 
-// (VIEW) Executed after the user has executed 2FA
+// (VIEW) Executed after the user has entered 2FA
 // Uses plantilla_home if the user is verified and plantilla_reverify if not
 function postVerifyLogin2FA($template, $configuration, $parameters) {
-    $result = $tfa->verifyCode($secret, $parameters['verification']);
-    if ($result) {
-        $template = 'loggedin';
-        createSession($result_row);
+    $sql = 'SELECT * FROM user_secrets WHERE user_id = :user_id AND secret_text = :secret_text';
+    $query = $GLOBALS["db"]->prepare($sql);
+    $query->bindValue(':user_email', $parameters['user_email']);
+    $query->bindValue(':secret_text', $parameters['secret_text']);
+    $query->execute();
+    $result_rows = $query->fetchAll(PDO::FETCH_ASSOC);
 
-        $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
-        $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
-        $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
-        printHtml($template, $configuration);
+    foreach($result_rows as $result_row) {
+        $verificationResult = $tfa->verifyCode($result_row['secret_text'], $parameters['verification']);
+        if ($verificationResult) {
+            $template = 'loggedin';
+            $sql = 'SELECT * FROM users WHERE (user_email = :user_verification_email)';
+            $query = $GLOBALS["db"]->prepare($sql);
+            $query->bindValue(':user_verification_email', $parameters['user_verification_email']);
+            $query->execute();
+            $result_row = $query->fetch();
+            createSession($result_row);
+    
+            $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
+            $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
+            $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
+            printHtml($template, $configuration);
+            break;
+        }
     }
+    
+    $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut verificar el codi de 2FA.</mark>";
 }
 
 // (VIEW) Executed after submitting the account recovery form
@@ -347,14 +359,25 @@ function verifyAccount($template, $configuration, $parameters) {
     printHtml($template, $configuration);
 }
 
+
 // Sends a specific verification email to the specified email. Automatically executed after registering
 function sendVerificationEmail($emailTo, $verificationcode) {
     $verificationTemplateVars = [
-        "{VERIFICATION_CODE}" => urlencode($verificationcode),
+        "{VERIFICATION_CODE}" => urlencode($verificationcode), // encodifiquem el paràmetre
         "{VERIFICATION_EMAIL}" => urlencode($emailTo), // encodifiquem el paràmetre per a que correus com exemple+1@gmail.com funcionin
         "{TIMESTAMP}" => date('l jS \of F Y h:i:s A') // afegim una variable que sigui diferent per cada correu per a que no s'amagui a partir de la 2a vegada
     ];
     sendEmail($emailTo, "Verifica el teu compte", getHtml('verification_email', $verificationTemplateVars));
+}
+
+// Sends a specific 2FA email to the specified email. Automatically executed after registering
+function send2FAEmail($emailTo, $verificationcode) {
+    $verificationTemplateVars = [
+        "{VERIFICATION_CODE}" => urlencode($verificationcode), // encodifiquem el paràmetre
+        "{VERIFICATION_EMAIL}" => urlencode($emailTo), // encodifiquem el paràmetre per a que correus com exemple+1@gmail.com funcionin
+        "{TIMESTAMP}" => date('l jS \of F Y h:i:s A') // afegim una variable que sigui diferent per cada correu per a que no s'amagui a partir de la 2a vegada
+    ];
+    sendEmail($emailTo, "Verifica que ets tu", getHtml('two_factor_email', $verificationTemplateVars));
 }
 
 // (VIEW) Executed when trying to log in without having verified the account beforehand or when choosing to resend the verification email.

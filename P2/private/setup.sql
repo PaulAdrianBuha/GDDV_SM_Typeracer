@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS games (
     win_time_p2 FLOAT DEFAULT NULL, -- Time when the player 2 wins
     progress_player1 INTEGER DEFAULT 0,
     progress_player2 INTEGER DEFAULT 0,
+    delay_player1 INTEGER DEFAULT 0, -- Stable latency of player 1 (time it takes for their petition to come back to them)
+    delay_player2 INTEGER DEFAULT 0, -- Stable latency of player 2 (time it takes for their petition to come back to them)
     phrase_id TEXT, -- Phrase id for the game
     active_sabotage_id TEXT DEFAULT NULL, -- Current sabotage id 
     active_sabotage_start_time FLOAT DEFAULT NULL, -- Sabotage start time
