@@ -15,23 +15,11 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-# https://robthree.github.io/TwoFactorAuth/getting-started.html
-use RobThree\Auth\TwoFactorAuth;
-use RobThree\Auth\Providers\Qr\BaconQrCodeProvider; // if using Bacon
-require '../TwoFactorAuth/TwoFactorAuth.php';
-require '../TwoFactorAuth/Providers/BaconQrCodeProvider.php';
-$secret = $tfa->createSecret();
-$tfa = new TwoFactorAuth(new BaconQrCodeProvider()); // using Bacon
-
 
 // Incloure lla libreria PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
-
-$google2fa = new Google2FA();
-echo $google2fa->generateSecretKey();
-die();
 
 require '../PHPMailer/src/Exception.php';
 require '../PHPMailer/src/PHPMailer.php';
@@ -267,12 +255,14 @@ function postLogin($template, $configuration, $parameters) {
             $configuration['{HOME_SECOND_BUTTON_URL}'] = "/?resendVerifyEmail=true&user_verification_email=" . urlencode($result_row['user_email']);
         } else {
             $template = 'two_factor';
-            $secret = $tfa->createSecret();
-            $sql = 'INSERT INTO user_secrets VALUES (user_id, secret_text) = (:user_id, :secret_text)';
+            $secret = rand(100000, 999999);
+            $sql = 'INSERT INTO user_secrets (user_id, secret_text, secret_creation_time) VALUES (:user_id, :secret_text, :secret_creation_time)';
             $query = $GLOBALS["db"]->prepare($sql);
             $query->bindValue(':user_id', $result_row['user_id']);
             $query->bindValue(':secret_text', $secret);
+            $query->bindValue(':secret_creation_time', time());
             $query->execute();
+            $configuration['{VERIFICATION_EMAIL}'] = $result_row['user_email'];
             send2FAEmail($result_row['user_email'], $secret);
         }
     } else {
@@ -284,15 +274,19 @@ function postLogin($template, $configuration, $parameters) {
 // (VIEW) Executed after the user has entered 2FA
 // Uses platilla_loggedin if the user has verified the account otherwise plantilla_home
 function postVerifyLogin2FA($template, $configuration, $parameters) {
-    $sql = 'SELECT * FROM user_secrets WHERE user_id = :user_id AND secret_text = :secret_text';
+    $sql = 'SELECT us.* FROM user_secrets us LEFT JOIN users u ON us.user_id = u.user_id WHERE u.user_email = :user_email AND
+            us.secret_text = :secret_text AND :current_time_minus_expiration <= us.secret_creation_time';
+    // No mostrarem un error diferent quan el codi 2FA está caducat per a que bad actors no ho sápiguin
     $query = $GLOBALS["db"]->prepare($sql);
-    $query->bindValue(':user_email', $parameters['user_email']);
-    $query->bindValue(':secret_text', $parameters['secret_text']);
+    $query->bindValue(':user_email', $parameters['user_verification_email']);
+    $query->bindValue(':secret_text', $parameters['user_verification_code']);
+    $query->bindValue(':current_time_minus_expiration', time() - 300);
     $query->execute();
     $result_rows = $query->fetchAll(PDO::FETCH_ASSOC);
 
+    $found = false;
     foreach($result_rows as $result_row) {
-        $verificationResult = $tfa->verifyCode($result_row['secret_text'], $parameters['user_verification_code']);
+        $verificationResult = $result_row['secret_text'] == $parameters['user_verification_code'];
         if ($verificationResult) {
             $template = 'loggedin';
             $sql = 'SELECT * FROM users WHERE (user_email = :user_verification_email)';
@@ -301,16 +295,20 @@ function postVerifyLogin2FA($template, $configuration, $parameters) {
             $query->execute();
             $result_row = $query->fetch();
             createSession($result_row);
-    
+            
             $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
             $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
             $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
             printHtml($template, $configuration);
+            $found = true;
             break;
         }
     }
     
-    $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut verificar el codi de 2FA.</mark>";
+    if (!$found) {
+        $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut verificar el codi de 2FA.</mark>";
+        printHtml($template, $configuration);
+    }
 }
 
 // (VIEW) Executed after submitting the account recovery form

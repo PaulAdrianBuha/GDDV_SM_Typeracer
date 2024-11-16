@@ -4,9 +4,10 @@
     - [x] Que els usuaris vegin el mateix al mateix temps
     - [x] Possibilitat de conflictes (recomano que siguin freqüents)
     - [x] Resolució d’aquests conflictes (més “justa” que ignorar-los)
-- [ ] Es valorarà
+- [x] Es valorarà
     - [x] Complexitat d’interaccions i conflictes
-    - [ ] Tenir en compte la distància (en termes de xarxa) dels jugadors al servidor
+    - [x] Tenir en compte la distància (en termes de xarxa) dels jugadors al servidor
+    - [ ] Resolució de conflictes tenint en compte la latència
 
 
 - [x] Hacer una tabla de phrases para insertar solo el id en lugar de insertar toda la frase como hacemos ahora

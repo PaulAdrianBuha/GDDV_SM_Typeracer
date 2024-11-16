@@ -19,3 +19,6 @@
         - tal vez utilizar el hash de la contraseña mismo + algo mas para el hash de la cookie
     [x] - sistema "remember me"? (alargar el lifespan de la cookie)
 [x] - CAPTCHA / **verificación pre-registro** / Pwned Passwords / 2FA
+
+[x] - Pwned Passwords
+[x] - 2FA
