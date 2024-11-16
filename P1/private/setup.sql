@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS cookies (
     user_id INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS user_secrets(
+CREATE TABLE IF NOT EXISTS user_secrets (
     secret_id INTEGER PRIMARY KEY,
     user_id INTEGER,
-    secret varchar(255)
+    secret_text varchar(255)
 );

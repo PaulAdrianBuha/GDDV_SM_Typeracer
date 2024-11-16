@@ -50,7 +50,10 @@ function comprovarEstatDelJoc() {
             guanyador = joc.winner;
             sabotageCharValue = joc.active_sabotage_char;
 
-            latencyPlayer.innerText = joc.time + " ms";
+            var current_time = Date.now();
+            
+            latencyPlayer.innerText = current_time - Math.round(joc.time * 1000) + " ms";
+            console.log(current_time, " ", joc.time * 1000, " ", latencyPlayer.innerText);
 
             if (joc.player1 === idJugador) {
                 if (joc.player2) {

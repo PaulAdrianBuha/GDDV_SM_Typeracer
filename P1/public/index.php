@@ -148,7 +148,6 @@ function getPage($template, $configuration, $parameters) {
             $configuration['{USER_VERIFICATION_CODE}'] = $parameters['user_verification_code'];
             $configuration['{USER_EMAIL}'] = $parameters['user_email'];
         } else {
-            //$template = 'home';
             $configuration['{FEEDBACK}'] = "S'ha produït un error en el procés de recuperació.";
         }
     } else if ($parameters['page'] == 'logout') {
@@ -272,8 +271,11 @@ function postLogin($template, $configuration, $parameters) {
             $query->execute();
             $result_row = $query->fetchAll(PDO::FETCH_ASSOC);*/
             $secret = $tfa->createSecret();
-            
-            
+            $sql = 'INSERT INTO user_secrets VALUES (user_id, secret_text) = (:user_id, :secret_text)';
+            $query = $GLOBALS["db"]->prepare($sql);
+            $query->bindValue(':user_id', $result_row['user_id']);
+            $query->bindValue(':secret_text', $secret);
+            $query->execute();
         }
     } else {
         //$template = 'home';
@@ -282,14 +284,18 @@ function postLogin($template, $configuration, $parameters) {
     printHtml($template, $configuration);
 }
 
-function postVerifyLogin($template, $configuration, $parameters) {
-    $template = 'loggedin';
-    createSession($result_row);
+function postVerifyLogin2FA($template, $configuration, $parameters) {
+    $result = $tfa->verifyCode($secret, $parameters['verification']);
+    if ($result) {
+        $template = 'loggedin';
+        createSession($result_row);
 
-    $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
-    $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
-    $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
-    printHtml($template, $configuration);
+        $configuration['{FEEDBACK}'] = '"Sessió" iniciada com <b>' . htmlentities($result_row['user_name']) . ' <br/> ' . htmlentities($result_row['user_email']) . '</b>';
+        $configuration['{LOGIN_LOGOUT_TEXT}'] = 'Tancar "sessió"';
+        $configuration['{LOGIN_LOGOUT_URL}'] = '/?page=logout';
+        printHtml($template, $configuration);
+    }
+    
 }
 
 // (VIEW) Executed after submitting the account recovery form
