@@ -62,7 +62,7 @@ function comprovarEstatDelJoc() {
 
             // DISPLAY LATENCY
             var time2 = Date.now();
-            current_delay = time2 - time1;
+            current_delay = (time2 - time1) / 2;
             prev_delays.push(current_delay); // push_back
             prev_delays.shift(); // pop_front
 
