@@ -110,7 +110,7 @@ function printHtml($template, $configuration) {
 
 // retrieve the html (with replacements) given a template
 function getHtml($template, $configuration) {
-    $html = file_get_contents('./plantilles/plantilla_' . $template . '.html', true);
+    $html = file_get_contents('plantilla_' . $template . '.html', true);
     $html = str_replace(array_keys($configuration), array_values($configuration), $html);
     return $html;
 }
