@@ -175,7 +175,7 @@ switch ($accio) {
             }
 
             // Manage who sabotages first --------------------------------------------------------------------------------------------------------------------------
-            $sabotage_diff_to_draw_time = 1;
+            $sabotage_diff_to_draw_time = 0.5;
             if ($joc['active_sabotage_done_time'] == null) // If the game hasn't chosen a sabotage winner yet
             {
                 if ($joc['active_sabotage_done_time_p1'] != null && $joc['active_sabotage_done_time_p2'] != null) // If both players reached a sabotage condition within the wait timeframe

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bueno Typeracer</title>
+    <link rel="icon" href="/favicon.png">
+    <link rel="stylesheet" href="game.css">
+</head>
+
+<body>
+    <h1 id="estat">Connectant al joc...</h1>
+    <h2 id="estat2">&nbsp;</h2>
+    <div id="joc">
+        <div id="progressDiv">
+            <p id="latencyPlayer" class="latencyLabel">- ms</p>
+            <p id="latencyOtherPlayer" class="latencyLabel">- ms</p>
+            <h2 id="usernamePlayer" class="progressLabel">Tú</h2>
+            <h2 id="usernameOtherPlayer" class="progressLabel">Rival</h2>
+            <img id="tuPfp" class="pfp" src="tu.png" alt="tu_pfp">
+            <img id="rivalPfp" class="pfp" src="rival.png" alt="rival_pfp">
+            <progress id="progressPlayer" value="0"></progress>
+            <progress id="progressOtherPlayer" value="0"></progress>
+        </div>
+        
+        <div id="areaDeJoc">
+            <p id="sabotageChar">&nbsp;</p>
+            <p id="textToType">
+                <span id="textTypedRight" class="textTypedSpan"></span>
+                <span id="textTypedWrong" class="textTypedSpan"></span>
+                <span id="textLeft" class="textTypedSpan"></span>
+            </p> 
+            <input type="text" name="input" id="input" autocomplete="off"/>
+            <input type="hidden" name="hiddenInput" id="hiddenInput"/>
+            <input type="hidden" name="user_id" id="user_id" value="{USER_ID}" />
+        </div>
+    </div>
+
+    <section>
+        <div>        
+            <a href="{MAIN_MENU_URL}">{MAIN_MENU_TEXT}</a>
+        </div>
+    </section>
+
+    <script src="game.js" defer></script>
+</body>
+
+</html>

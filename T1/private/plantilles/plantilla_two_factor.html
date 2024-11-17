@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ca" color-mode="user">
+
+<head>
+    <!-- dades tècniques de la pàgina -->
+    <meta charset="utf-8">
+    <title>{SITE_NAME}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"><!-- per a dispositius mòbils -->
+    <meta name="author" content="Roger Roca i Paul Buha">
+    <!-- estètica de la pàgina -->
+    <link rel="icon" href="/favicon.png">
+    <link rel="stylesheet" href="mvp.css">
+    <link rel="stylesheet" href="el_meu.css">
+    <!-- per afegir interactivitat a la pàgina -->
+    <script defer src="el_meu.js"></script>
+</head>
+
+<body>
+    <!-- contingut visible de la pàgina -->
+    <main>
+        <header>
+            <h1>{SITE_NAME}</h1>
+            <div>{FEEDBACK}</div>
+        </header>
+        <section>
+            <form method="POST" action="/">
+                <header>
+                    <h2>Verifica que ets tu</h2>
+                    <p>Hem enviat un codi al teu correu electrònic perquè verifiquis que ets tú</p>
+                </header>
+                <label for="user_verification_code">Codi de verificació</label>
+                <input id="user_verification_code" type="number" name="user_verification_code" />
+                <input id="user_verification_email" type="hidden" name="user_verification_email" value="{VERIFICATION_EMAIL}" />
+                <input type="submit" name="twoFactor" value="Validar" />
+            </form>
+        </section>
+        <section>
+            <div>
+                <a href="/?page=login">Torna al login</a>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

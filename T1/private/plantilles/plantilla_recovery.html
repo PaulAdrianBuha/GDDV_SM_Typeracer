@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ca" color-mode="user">
+
+<head>
+    <!-- dades tècniques de la pàgina -->
+    <meta charset="utf-8">
+    <title>{SITE_NAME} :: Recuperació de compte</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"><!-- per a dispositius mòbils -->
+    <meta name="author" content="Roger Roca i Paul Buha">
+    <!-- estètica de la pàgina -->
+    <link rel="icon" href="/favicon.png">
+    <link rel="stylesheet" href="mvp.css">
+    <link rel="stylesheet" href="el_meu.css">
+    <!-- per afegir interactivitat a la pàgina -->
+    <script defer src="el_meu.js"></script>
+</head>
+
+<body>
+    <!-- contingut visible de la pàgina -->
+    <main>
+        <header>
+            <h1><a href="/">{SITE_NAME}</a></h1>
+            <div>{FEEDBACK}</div>
+        </header>
+        <section>
+            <form method="POST" action="/">
+                <header>
+                    <h2>Recuperar compte</h2>
+                </header>
+                <label for="recovery_username">Nom d'usuari/Correu electrònic</label>
+                <input id="recovery_username" type="text" name="recovery_name" value="" />
+                <input type="submit" name="recovery" value="Enviar" />
+            </form>
+        </section>
+        <section>
+            <div>
+                <a href="/">Torna a l'inici</a>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>
