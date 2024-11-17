@@ -81,7 +81,7 @@ function comprovarEstatDelJoc() {
             guanyador = joc.winner;
             sabotageCharValue = joc.active_sabotage_char;
 
-            //input.focus();
+            input.focus();
 
             // DISPLAY LATENCY
             var time2 = Date.now();
