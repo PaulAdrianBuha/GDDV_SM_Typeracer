@@ -5,6 +5,7 @@ textarea {
     width: calc(100% - 1.6rem);
 }
 
-input {
-    margin: auto;
+input[type="submit"] {
+    margin-left: auto;
+    margin-right: auto;
 }

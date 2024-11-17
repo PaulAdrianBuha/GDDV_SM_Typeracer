@@ -200,7 +200,7 @@ function postRegister($template, $configuration, $parameters) {
     } else {
         $template = 'reverify';
          // Generamos un codigo random para verificar que enviaremos al correo y asociamos al user en la base de datos
-        $verificationcode = random_bytes(10);
+        $verificationcode = rand(10000000, 99999999);
 
         $sql = 'INSERT INTO users (user_name, user_password, user_email, user_verification_code) VALUES (:user_name, :user_password, :user_email, :user_verification_code)';
         $query = $GLOBALS["db"]->prepare($sql);
@@ -473,17 +473,38 @@ function changePassword($template, $configuration, $parameters) {
     } else if (($pwnedTimes = isPasswordPwned($parameters['user_recover_password'])) > 0) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: Prova una contrasenya més segura. La contrasenya ha estat leakejada " . $pwnedTimes . " vegades.</mark>";
     } else {
-        $sql = 'UPDATE users SET user_password = :user_recover_password WHERE (user_email = :user_email AND user_verification_code = :user_verification_code)';
+        // Get the verification code of the associated account
+        $sql = 'SELECT user_verification_code FROM users WHERE user_email = :user_email';
         $query = $GLOBALS["db"]->prepare($sql);
-        $query->bindValue(':user_recover_password', password_hash($parameters['user_recover_password'], PASSWORD_BCRYPT));
         $query->bindValue(':user_email', $parameters['user_email']);
-        $query->bindValue(':user_verification_code', $parameters['user_verification_code']);
-        try {
-            $query->execute();
+        $query->execute();
+        $result_row = $query->fetch();
+        if ($result_row) {
+            // Check if the fetched verification code matches with the one sent from the submit form post
+            if (strval($result_row['user_verification_code']) == strval($parameters['user_verification_code']))
+            {
+                $sql = 'UPDATE users SET user_password = :user_recover_password WHERE user_email = :user_email';
+                $query = $GLOBALS["db"]->prepare($sql);
+                $query->bindValue(':user_recover_password', password_hash($parameters['user_recover_password'], PASSWORD_BCRYPT));
+                $query->bindValue(':user_email', $parameters['user_email']);
+                try {
+                    $query->execute();
 
-            $configuration['{FEEDBACK}'] = "S'ha canviat la contrasenya exitosament";
-        } catch (PDOException $e) {
-            $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut canviar la contrasenya</mark>";
+                    $configuration['{FEEDBACK}'] = "S'ha canviat la contrasenya exitosament";
+                } catch (PDOException $e) {
+                    $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut canviar la contrasenya</mark>";
+                    print_r($e);
+                }
+            }
+            else
+            {
+                $configuration['{FEEDBACK}'] = "<mark>ERROR: El codi de verificació per canviar la contrasenya es incorrecte</mark>"
+                    . $result_row['user_verification_code'] . " " . $parameters['user_verification_code'];
+            }
+        }
+        else
+        {
+            $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha trobat el compte que es vol recuperar</mark>";
         }
     }
     printHtml($template, $configuration);
