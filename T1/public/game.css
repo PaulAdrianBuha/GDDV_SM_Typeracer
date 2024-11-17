@@ -1,3 +1,7 @@
+p {
+    width: auto;
+}
+
 #joc {
     display: none;
 }
