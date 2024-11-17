@@ -27,7 +27,7 @@ require '../PHPMailer/src/SMTP.php';
 
 // defaults
 $template = 'home';
-$db_connection = 'sqlite:..\private\typeracer.db';
+$db_connection = 'sqlite:../private/typeracer.db';
 $GLOBALS["db"] = new PDO($db_connection);
 
 $configuration = array(
