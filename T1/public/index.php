@@ -102,6 +102,13 @@ if (isset($parameters['page'])) {
 }
 
 // FUNCTIONS -----------------------------------------------------------------------------------------------------------------
+function getHost() {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $host = $_SERVER['HTTP_HOST'];
+    $uri = $_SERVER['REQUEST_URI'];
+    $url = $protocol . "://" . $host . $uri;
+    return $url;
+}
 
 // process template and show output
 function printHtml($template, $configuration) {
@@ -379,7 +386,8 @@ function sendVerificationEmail($emailTo, $verificationcode) {
     $verificationTemplateVars = [
         "{VERIFICATION_CODE}" => urlencode($verificationcode), // encodifiquem el paràmetre
         "{VERIFICATION_EMAIL}" => urlencode($emailTo), // encodifiquem el paràmetre per a que correus com exemple+1@gmail.com funcionin
-        "{TIMESTAMP}" => date('l jS \of F Y h:i:s A') // afegim una variable que sigui diferent per cada correu per a que no s'amagui a partir de la 2a vegada
+        "{TIMESTAMP}" => date('l jS \of F Y h:i:s A'), // afegim una variable que sigui diferent per cada correu per a que no s'amagui a partir de la 2a vegada
+        "{HOST}" => getHost()
     ];
     sendEmail($emailTo, "Verifica el teu compte", getHtml('verification_email', $verificationTemplateVars));
 }
@@ -422,7 +430,8 @@ function sendRecoveryEmail($emailTo, $verificationcode) {
     $recoveryTemplateVars = [
         "{VERIFICATION_CODE}" => urlencode($verificationcode),
         "{EMAIL}" => urlencode($emailTo), // encodifiquem el paràmetre per a que correus com exemple+1@gmail.com funcionin
-        "{TIMESTAMP}" => date('l jS \of F Y h:i:s A') // afegim una variable que sigui diferent per cada correu per a que no s'amagui a partir de la 2a vegada
+        "{TIMESTAMP}" => date('l jS \of F Y h:i:s A'), // afegim una variable que sigui diferent per cada correu per a que no s'amagui a partir de la 2a vegada
+        "{HOST}" => getHost()
     ];
     sendEmail($emailTo, "Recupera el teu compte", getHtml('recovery_email', $recoveryTemplateVars));
 }
