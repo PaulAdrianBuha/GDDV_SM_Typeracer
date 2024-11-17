@@ -105,8 +105,7 @@ if (isset($parameters['page'])) {
 function getHost() {
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
     $host = $_SERVER['HTTP_HOST'];
-    $uri = $_SERVER['REQUEST_URI'];
-    $url = $protocol . "://" . $host . $uri;
+    $url = $protocol . "://" . $host;
     return $url;
 }
 
