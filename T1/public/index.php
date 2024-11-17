@@ -147,7 +147,7 @@ function getPage($template, $configuration, $parameters) {
         }
     } else if ($parameters['page'] == 'logout') {
         deleteCookieDB();
-        setcookie("SessionCookie", expires_or_options: time() - 1);
+        setcookie("SessionCookie", "", time() - 1000);
     }
 
     printHtml($template, $configuration);

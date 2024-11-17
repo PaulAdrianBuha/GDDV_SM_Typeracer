@@ -13,6 +13,9 @@ const latencyOtherPlayer = document.getElementById('latencyOtherPlayer');
 const usernamePlayer = document.getElementById('usernamePlayer');
 const usernameOtherPlayer = document.getElementById('usernameOtherPlayer');
 
+const pfpPlayer = document.getElementById('tuPfp');
+const pfpOtherPlayer = document.getElementById('rivalPfp');
+
 const progressPlayer = document.getElementById('progressPlayer');
 const progressOtherPlayer = document.getElementById('progressOtherPlayer');
 
@@ -78,6 +81,8 @@ function comprovarEstatDelJoc() {
             guanyador = joc.winner;
             sabotageCharValue = joc.active_sabotage_char;
 
+            //input.focus();
+
             // DISPLAY LATENCY
             var time2 = Date.now();
             current_delay = (time2 - time1) / 2;
@@ -109,16 +114,19 @@ function comprovarEstatDelJoc() {
                             // Has sabotejat als altres jugadors durant 3 segons
                             sabotageChar.style.backgroundColor = "#bedfb3";
                             textEstat2.innerText = "Has sabotejat al rival!";
+                            pfpOtherPlayer.src = "rival_stunned.png";
                         } else {
                             // Has sigut sabotejat per 3 segons
                             sabotageChar.style.backgroundColor = "#dfb3b3";
                             if (joc.active_sabotage_in_progress) {
                                 input.disabled = true;
                                 textEstat2.innerText = "Has sigut sabotejat!";
+                                pfpPlayer.src = "tu_stunned.png";
                             } else {
                                 // Ja no estàs sabotejat (sabotage char changes)
                                 input.disabled = false;
                                 textEstat2.innerHTML = "&nbsp;";
+                                pfpPlayer.src = "tu.png";
                                 input.focus();
                             }
                         }
@@ -127,11 +135,13 @@ function comprovarEstatDelJoc() {
                             // Ja no estàs sabotejat (sabotage char changes)
                             input.disabled = false;
                             textEstat2.innerHTML = "&nbsp;";
+                            pfpPlayer.src = "tu.png";
                             input.focus();
                         }
                         else {
                             // El teu rival ja no està sabotejat
                             textEstat2.innerHTML = "&nbsp;"; // (Per fer clear del "Has sabotejat al rival!")
+                            pfpOtherPlayer.src = "rival.png";
                         }
                         sabotageChar.style.backgroundColor = "#ffffff";
                     }
@@ -155,15 +165,18 @@ function comprovarEstatDelJoc() {
                          // Has sabotejat als altres jugadors durant 3 segons
                         sabotageChar.style.backgroundColor = "#bedfb3";
                         textEstat2.innerText = "Has sabotejat al rival!";
+                        pfpOtherPlayer.src = "rival_stunned.png";
                     } else {
                          // Has sigut sabotejat per 3 segons
                         sabotageChar.style.backgroundColor = "#dfb3b3";
                         if (joc.active_sabotage_in_progress) { // si l'altre jugador ha arribat primer
                             input.disabled = true;
                             textEstat2.innerText = "Has sigut sabotejat!";
+                            pfpPlayer.src = "tu_stunned.png";
                         } else {
                             input.disabled = false;
                             textEstat2.innerHTML = "&nbsp;";
+                            pfpPlayer.src = "tu.png";
                             input.focus();
                         }
                     }
@@ -172,11 +185,13 @@ function comprovarEstatDelJoc() {
                         // Ja no estàs sabotejat
                         input.disabled = false;
                         textEstat2.innerHTML = "&nbsp;";
+                        pfpPlayer.src = "tu.png";
                         input.focus();
                     }
                     else {
                         // El teu rival ja no està sabotejat
                         textEstat2.innerHTML = "&nbsp;"; // (Per fer clear del "Has sabotejat al rival!")
+                        pfpOtherPlayer.src = "rival.png";
                     }
                     sabotageChar.style.backgroundColor = "#ffffff";
                 }
