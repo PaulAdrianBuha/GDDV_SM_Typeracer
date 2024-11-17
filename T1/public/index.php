@@ -470,6 +470,8 @@ function changePassword($template, $configuration, $parameters) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: No s'ha pogut canviar la contrasenya. La contrasenya ha de ser de 8 caràcters com a mínim.</mark>";
     } else if ( $parameters['user_recover_password'] != $parameters['user_repeat_password']) {
         $configuration['{FEEDBACK}'] = "<mark>ERROR: Les contrasenyes no coincideixen</mark>";
+    } else if (($pwnedTimes = isPasswordPwned($parameters['user_recover_password'])) > 0) {
+        $configuration['{FEEDBACK}'] = "<mark>ERROR: Prova una contrasenya més segura. La contrasenya ha estat leakejada " . $pwnedTimes . " vegades.</mark>";
     } else {
         $sql = 'UPDATE users SET user_password = :user_recover_password WHERE (user_email = :user_email AND user_verification_code = :user_verification_code)';
         $query = $GLOBALS["db"]->prepare($sql);
