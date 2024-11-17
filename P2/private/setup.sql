@@ -7,15 +7,15 @@ CREATE TABLE IF NOT EXISTS games (
     win_time_p2 FLOAT DEFAULT NULL, -- Time when the player 2 wins
     progress_player1 INTEGER DEFAULT 0,
     progress_player2 INTEGER DEFAULT 0,
-    delay_player1 INTEGER DEFAULT 0, -- Stable latency of player 1 (time it takes for their petition to come back to them)
-    delay_player2 INTEGER DEFAULT 0, -- Stable latency of player 2 (time it takes for their petition to come back to them)
+    delay_player1 INTEGER DEFAULT 0, -- Stable latency of player 1 in ms (time it takes for their petition to come back to them)
+    delay_player2 INTEGER DEFAULT 0, -- Stable latency of player 2 in ms (time it takes for their petition to come back to them)
     phrase_id TEXT, -- Phrase id for the game
-    active_sabotage_id TEXT DEFAULT NULL, -- Current sabotage id 
-    active_sabotage_start_time FLOAT DEFAULT NULL, -- Sabotage start time
+    active_sabotage_id TEXT DEFAULT NULL, -- Current sabotage id
+    active_sabotage_start_time FLOAT DEFAULT NULL, -- Sabotage start time in s
     active_sabotage_player TEXT DEFAULT NULL, -- Player who sabotages the other player
-    active_sabotage_done_time_p1 FLOAT DEFAULT NULL, -- Time when the player 1 does their sabotage
-    active_sabotage_done_time_p2 FLOAT DEFAULT NULL, -- Time when the player 2 does their sabotage
-    active_sabotage_done_time FLOAT DEFAULT NULL -- Time when the sabotage is actually processed and takes effect
+    active_sabotage_done_time_p1 FLOAT DEFAULT NULL, -- Time in s when the player 1 does their sabotage
+    active_sabotage_done_time_p2 FLOAT DEFAULT NULL, -- Time in s when the player 2 does their sabotage
+    active_sabotage_done_time FLOAT DEFAULT NULL -- Time in s when the sabotage is actually processed and takes effect
 );
 
 CREATE TABLE IF NOT EXISTS phrases (

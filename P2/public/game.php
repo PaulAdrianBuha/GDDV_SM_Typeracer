@@ -79,34 +79,59 @@ switch ($accio) {
 
             $wait_for_other_player_time = 1;
 
+            // Update latency/delay value for this player (once every 5 ticks) --------------------------------------
+            if ($delay != -1) // -1 is sent from the player every game tick non-multiple of 5
+            {
+                if ($player_id == $joc['player1']) // is player1
+                {
+                    $stmt = $db->prepare('UPDATE games SET delay_player1 = :delay_player WHERE game_id = :game_id');
+                    $joc['delay_player1'] = $delay; // Maybe dangerous to update its value before execute?
+                }
+                elseif ($player_id == $joc['player2']) // is player2
+                {
+                    $stmt = $db->prepare('UPDATE games SET delay_player2 = :delay_player WHERE game_id = :game_id');
+                    $joc['delay_player2'] = $delay; // Maybe dangerous to update its value before execute?
+                }
+                
+                $stmt->bindValue(':delay_player', $delay);
+                $stmt->bindValue(':game_id', $game_id);
+                $stmt->execute();
+            }
+
+            $delay_p1_s = $joc['delay_player1'] / 1000; // Delay in seconds
+            $delay_p2_s = $joc['delay_player2'] / 1000; // Delay in seconds
+
             // Manage who wins first --------------------------------------------------------------------------------------------------------------------------
             $win_diff_to_draw_time = 1;
             if ($joc['winner'] == null) // If the game hasn't chosen a winner yet
             {
-                if ($joc['win_time_p1'] != null && $joc['win_time_p2'] != null)
+                if ($joc['win_time_p1'] != null && $joc['win_time_p2'] != null) // If both players reached a win condition within the wait timeframe
                 {
                     $stmt = $db->prepare('UPDATE games SET winner = :winner,
                         win_time_p1 = :win_time_p1,
                         win_time_p2 = :win_time_p2
                         WHERE game_id = :game_id'
                     );
+                    // A decision will be made. No matter the outcome, we will want to reset the win times
                     $stmt->bindValue(':win_time_p1', null);
                     $stmt->bindValue(':win_time_p2', null);
                     $stmt->bindValue(':game_id', $game_id);
 
-                    if (abs($joc['win_time_p2'] - $joc['win_time_p1']) < $win_diff_to_draw_time) 
+                    if (abs(($joc['win_time_p2'] - $delay_p2_s)
+                        - ($joc['win_time_p1'] - $delay_p1_s))
+                        < $win_diff_to_draw_time) // If the win times are close enough to be considered a draw
                     {
                         $stmt->bindValue(':winner', "DRAW");
                         $joc['winner'] = "DRAW";
                     }
                     else
                     {
-                        if ($joc['win_time_p2'] > $joc['win_time_p1'])
+                        if (($joc['win_time_p2'] - $delay_p2_s) > ($joc['win_time_p1'] - $delay_p1_s)) // p1 won earlier
                         {
                             $stmt->bindValue(':winner', $joc['player1']);
                             $joc['winner'] = $joc['player1'];
                         }
-                        else //($joc['win_time_p2'] < $joc['win_time_p1'])
+                        else //(($joc['win_time_p2'] - $delay_p2_s) < ($joc['win_time_p1'] - $delay_p1_s)) // p2 won earlier
                         {
                             $stmt->bindValue(':winner', $joc['player2']);
                             $joc['winner'] = $joc['player2'];
@@ -115,9 +140,9 @@ switch ($accio) {
 
                     $stmt->execute();
                 }
-                elseif ($joc['win_time_p1'] == null && $joc['win_time_p2'] != null) // Check if p2 already sabotaged but not enough time elapsed to determine if the p1 also sabotages
+                elseif ($joc['win_time_p1'] == null && $joc['win_time_p2'] != null) // If p2 already sabotaged but not enough time elapsed to determine if the p1 also sabotages
                 {
-                    if ($current_time > $joc['win_time_p2'] + $wait_for_other_player_time) //TODO: Testear esto
+                    if ($current_time > ($joc['win_time_p2'] - $delay_p2_s) + $wait_for_other_player_time) // Enough time has passed while waiting for p1 to also win
                     {
                         $stmt = $db->prepare('UPDATE games SET winner = :winner,
                             win_time_p2 = :win_time_p2
@@ -131,9 +156,9 @@ switch ($accio) {
                         $joc['winner'] = $joc['player2'];
                     }
                 }
-                elseif ($joc['win_time_p1'] != null && $joc['win_time_p2'] == null) // Check if p1 already sabotaged but not enough time elapsed to determine if the p2 also sabotages
+                elseif ($joc['win_time_p1'] != null && $joc['win_time_p2'] == null) // If p1 already sabotaged but not enough time elapsed to determine if the p2 also sabotages
                 {
-                    if ($current_time > $joc['win_time_p1'] + $wait_for_other_player_time) //TODO: Testear esto
+                    if ($current_time > ($joc['win_time_p1'] - $delay_p1_s) + $wait_for_other_player_time) // Enough time has passed while waiting for p2 to also win
                     {
                         $stmt = $db->prepare('UPDATE games SET winner = :winner,
                             win_time_p1 = :win_time_p1
@@ -153,7 +178,7 @@ switch ($accio) {
             $sabotage_diff_to_draw_time = 1;
             if ($joc['active_sabotage_done_time'] == null) // If the game hasn't chosen a sabotage winner yet
             {
-                if ($joc['active_sabotage_done_time_p1'] != null && $joc['active_sabotage_done_time_p2'] != null)
+                if ($joc['active_sabotage_done_time_p1'] != null && $joc['active_sabotage_done_time_p2'] != null) // If both players reached a sabotage condition within the wait timeframe
                 {
                     $stmt = $db->prepare('UPDATE games SET active_sabotage_player = :active_sabotage_player,
                         active_sabotage_done_time_p1 = :active_sabotage_done_time_p1,
@@ -161,25 +186,28 @@ switch ($accio) {
                         active_sabotage_done_time = :active_sabotage_done_time
                         WHERE game_id = :game_id'
                     );
+                    // A decision will be made. No matter the outcome, we will want to reset the sabotage times
                     $stmt->bindValue(':active_sabotage_done_time', $current_time);
                     $stmt->bindValue(':active_sabotage_done_time_p1', null);
                     $stmt->bindValue(':active_sabotage_done_time_p2', null);
 
                     $stmt->bindValue(':game_id', $game_id);
 
-                    if (abs($joc['active_sabotage_done_time_p2'] - $joc['active_sabotage_done_time_p1']) < $sabotage_diff_to_draw_time) 
+                    if (abs(($joc['active_sabotage_done_time_p2'] - $delay_p2_s)
+                        - ($joc['active_sabotage_done_time_p1'] - $delay_p1_s))
+                        < $sabotage_diff_to_draw_time)  // If the sabotage times are close enough to be considered a draw
                     {
                         $stmt->bindValue(':active_sabotage_player', "DRAW");
                         $joc['active_sabotage_player'] = "DRAW";
                     }
                     else
                     {
-                        if ($joc['active_sabotage_done_time_p2'] > $joc['active_sabotage_done_time_p1'])
+                        if (($joc['active_sabotage_done_time_p2'] - $delay_p2_s) > ($joc['active_sabotage_done_time_p1'] - $delay_p1_s)) // p1 sabotaged earlier
                         {
                             $stmt->bindValue(':active_sabotage_player', $joc['player1']);
                             $joc['active_sabotage_player'] = $joc['player1'];
                         }
-                        else //($joc['active_sabotage_done_time_p2'] < $joc['active_sabotage_done_time_p1'])
+                        else //(($joc['active_sabotage_done_time_p2'] - $delay_p2_s) < ($joc['active_sabotage_done_time_p1'] - $delay_p1_s)) // p2 sabotaged earlier
                         {
                             $stmt->bindValue(':active_sabotage_player', $joc['player2']);
                             $joc['active_sabotage_player'] = $joc['player2'];
@@ -189,9 +217,9 @@ switch ($accio) {
 
                     $stmt->execute();
                 }
-                elseif ($joc['active_sabotage_done_time_p1'] == null && $joc['active_sabotage_done_time_p2'] != null) // Check if p2 already sabotaged but not enough time elapsed to determine if the p1 also sabotages
+                elseif ($joc['active_sabotage_done_time_p1'] == null && $joc['active_sabotage_done_time_p2'] != null) // If p2 already sabotaged but not enough time elapsed to determine if the p1 also sabotages
                 {
-                    if ($current_time > $joc['active_sabotage_done_time_p2'] + $wait_for_other_player_time) //TODO: Testear esto
+                    if ($current_time > ($joc['active_sabotage_done_time_p2'] - $delay_p2_s) + $wait_for_other_player_time) // Enough time has passed while waiting for p1 to also sabotage
                     {
                         $stmt = $db->prepare('UPDATE games SET active_sabotage_player = :active_sabotage_player,
                             active_sabotage_done_time = :active_sabotage_done_time,
@@ -208,9 +236,9 @@ switch ($accio) {
                         $joc['active_sabotage_done_time'] = $current_time;
                     }
                 }
-                elseif ($joc['active_sabotage_done_time_p1'] != null && $joc['active_sabotage_done_time_p2'] == null) // Check if p1 already sabotaged but not enough time elapsed to determine if the p2 also sabotages
+                elseif ($joc['active_sabotage_done_time_p1'] != null && $joc['active_sabotage_done_time_p2'] == null) // If p1 already sabotaged but not enough time elapsed to determine if the p2 also sabotages
                 {
-                    if ($current_time > $joc['active_sabotage_done_time_p1'] + $wait_for_other_player_time) //TODO: Testear esto
+                    if ($current_time > ($joc['active_sabotage_done_time_p1'] - $delay_p1_s) + $wait_for_other_player_time) // Enough time has passed while waiting for p2 to also sabotage
                     {
                         $stmt = $db->prepare('UPDATE games SET active_sabotage_player = :active_sabotage_player,
                             active_sabotage_done_time = :active_sabotage_done_time,
@@ -285,25 +313,6 @@ switch ($accio) {
                 $joc['active_sabotage_id'] = null;
                 $joc['active_sabotage_char'] = null;
                 $joc['active_sabotage_player'] = null;
-            }
-
-            // Update latency/delay value for this player (once every 5 ticks) --------------------------------------
-            if ($delay != -1) // -1 is sent from the player every game tick non-multiple of 5
-            {
-                if ($player_id == $joc['player1']) // is player1
-                {
-                    $stmt = $db->prepare('UPDATE games SET delay_player1 = :delay_player WHERE game_id = :game_id');
-                    $joc['delay_player1'] = $delay; // Maybe dangerous to update its value before execute?
-                }
-                elseif ($player_id == $joc['player2']) // is player2
-                {
-                    $stmt = $db->prepare('UPDATE games SET delay_player2 = :delay_player WHERE game_id = :game_id');
-                    $joc['delay_player2'] = $delay; // Maybe dangerous to update its value before execute?
-                }
-                
-                $stmt->bindValue(':delay_player', $delay);
-                $stmt->bindValue(':game_id', $game_id);
-                $stmt->execute();
             }
             
 
